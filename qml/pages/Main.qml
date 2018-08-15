@@ -7,6 +7,10 @@ Page {
     id: page
     allowedOrientations: Orientation.All
 
+    Component.onCompleted: {
+        console.log("QML: Open URL: " + launchArgs);
+    }
+
     Column {
         anchors.centerIn: parent
         spacing: Theme.paddingLarge

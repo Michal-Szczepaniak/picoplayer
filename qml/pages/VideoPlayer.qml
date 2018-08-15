@@ -229,19 +229,24 @@ Page {
     MprisPlayer {
         id: mprisPlayer
 
-        serviceName: "microtube"
-        property string title: ""
+        serviceName: "picoplayer"
+        property string title: mediaPlayer.metaData.title ? mediaPlayer.metaData.title : "picoplayer"
         property var playbackState: Mpris.Playing
+
+
+        Component.onCompleted: {
+            title = mediaPlayer.metaData.title !== undefined ? mediaPlayer.metaData.title : "picoplayer"
+        }
 
         onTitleChanged: {
             var metadata = mprisPlayer.metadata
 
-            metadata[Mpris.metadataToString(Mpris.Title)] = song // String
+            metadata[Mpris.metadataToString(Mpris.Title)] = title // String
 
             mprisPlayer.metadata = metadata
         }
 
-        identity: "microtube"
+        identity: "picoplayer"
 
         canControl: true
 
