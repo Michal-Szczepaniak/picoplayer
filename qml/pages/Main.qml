@@ -5,6 +5,7 @@ import "../dialogs"
 
 Page {
     id: page
+    allowedOrientations: Orientation.All
 
     Column {
         anchors.centerIn: parent
@@ -21,13 +22,16 @@ Page {
             id: streamButton
             text: "Open URL Stream…"
             onClicked: {
-                var dialog = pageStack.push(Qt.resolvedUrl("../dialogs/UrlStreamPickerDialog.qml"))
+                pageStack.push(urlPickerPage)
             }
         }
 
         Button {
             text: "About"
             width: streamButton.width
+            onClicked: {
+                pageStack.push(Qt.resolvedUrl("About.qml"))
+            }
         }
     }
 
@@ -35,8 +39,33 @@ Page {
         id: videoPickerPage
         FilePickerPage {
             onSelectedContentPropertiesChanged: {
-                pageStack.push(Qt.resolvedUrl("VideoPlayer.qml"), {url: selectedContentProperties.filePath})
+                pageStack.push(Qt.resolvedUrl("VideoPlayer.qml"), {url: selectedContentProperties.filePath, isLocal: true})
             }
         }
+    }
+
+    Component {
+        id: urlPickerPage
+        Dialog {
+            allowedOrientations: Orientation.All
+//            acceptDestination: Qt.resolvedUrl("VideoPlayer.qml")
+
+            onAccepted: pageStack.push(Qt.resolvedUrl("VideoPlayer.qml"), {url: urlField.text, isLocal: false})
+
+            Column {
+                width: parent.width
+
+                DialogHeader { }
+
+                TextField {
+                    id: urlField
+                    width: parent.width
+                    placeholderText: "https://…"
+                    label: "Stream URL"
+                    focus: true
+                }
+            }
+        }
+
     }
 }

@@ -20,8 +20,8 @@ DISTFILES += qml/picoplayer.qml \
     translations/*.ts \
     picoplayer.desktop \
     qml/pages/Main.qml \
-    qml/dialogs/UrlStreamPickerDialog.qml \
     qml/pages/VideoPlayer.qml
+    qml/pages/About.qml
 
 SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172
 

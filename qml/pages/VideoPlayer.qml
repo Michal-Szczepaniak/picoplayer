@@ -7,8 +7,14 @@ import org.nemomobile.mpris 1.0
 Page {
     id: page
 
+    allowedOrientations: Orientation.All
+    showNavigationIndicator: !(!_controlsVisible && page.orientation === Orientation.Landscape)
+
     property string url
+    property bool isLocal
     property bool _controlsVisible: true
+
+    Component.onCompleted: mediaPlayer.videoPlay()
 
     function showHideControls() {
         if (_controlsVisible) {
@@ -44,11 +50,13 @@ Page {
 
             MediaPlayer {
                 id: mediaPlayer
-                source: url
+                source: url.trim()
 
                 function videoPlay() {
                     videoPlaying = true
                     if (mediaPlayer.bufferProgress == 1) {
+                        mediaPlayer.play()
+                    } else if (isLocal) {
                         mediaPlayer.play()
                     }
                 }
@@ -81,14 +89,16 @@ Page {
                 }
 
                 onBufferProgressChanged: {
-                    if (videoPlaying && mediaPlayer.bufferProgress == 1) {
+                    if (!isLocal && videoPlaying && mediaPlayer.bufferProgress == 1) {
                         mediaPlayer.play();
                     }
 
-                    if (mediaPlayer.bufferProgress == 0) {
+                    if (!isLocal && mediaPlayer.bufferProgress == 0) {
                         mediaPlayer.pause();
                     }
                 }
+
+                onPositionChanged: proggress.value = mediaPlayer.position
             }
 
             VideoOutput {
@@ -109,7 +119,7 @@ Page {
                         text: mediaPlayer.errorMsg
                         visible: parent.visible
                         anchors.centerIn: parent
-                        font.pointSize: Theme.fontSizeExtraLarge
+                        font.pixelSize: Theme.fontSizeExtraLarge
                         font.family: Theme.fontFamilyHeading
                     }
                 }
@@ -117,7 +127,7 @@ Page {
                 BusyIndicator {
                     size: BusyIndicatorSize.Large
                     anchors.centerIn: parent
-                    running: mediaPlayer.bufferProgress != 1
+                    running: !isLocal && mediaPlayer.bufferProgress != 1
                 }
 
                 MouseArea {
@@ -160,6 +170,7 @@ Page {
 
                 IconButton {
                     id: playButton
+                    enabled: opacity != 0
                     icon.source: mediaPlayer.playbackState == MediaPlayer.PlayingState ? "image://theme/icon-m-pause" : "image://theme/icon-m-play"
                     anchors.centerIn: parent
                     onClicked: mediaPlayer.playbackState == MediaPlayer.PlayingState ? mediaPlayer.videoPause() : mediaPlayer.videoPlay()
@@ -172,24 +183,13 @@ Page {
                     anchors.left: videoOutput.left
                     anchors.right: videoOutput.right
                     anchors.bottom: videoOutput.bottom
-                    anchors.bottomMargin: -proggress.height/2
-                    anchors.leftMargin: -Theme.paddingLarge*4
-                    anchors.rightMargin: -Theme.paddingLarge*4
-                    handleVisible: _controlsVisible
-
-                    function update(value) {
-                        dontSeek = true
-                        proggress.value = value
-                        dontSeek = false
-                    }
+                    visible: _controlsVisible
 
                     Behavior on value {
                         NumberAnimation {
                             duration: 10
                         }
                     }
-
-                    property var dontSeek: false
 
                     NumberAnimation on opacity {
                         id: showAnimation3
@@ -203,10 +203,7 @@ Page {
                         duration: 100
                     }
 
-                    onValueChanged: {
-                        if (!dontSeek)
-                            mediaPlayer.seek(proggress.value)
-                    }
+                    onValueChanged: down && mediaPlayer.seek(proggress.value)
                 }
             }
 
