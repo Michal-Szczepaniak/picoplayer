@@ -12,7 +12,9 @@
 # The name of your application
 TARGET = picoplayer
 
-CONFIG += sailfishapp_qml
+CONFIG += sailfishapp
+
+SOURCES += src/picoplayer.cpp
 
 DISTFILES += qml/picoplayer.qml \
     qml/cover/CoverPage.qml \
@@ -33,4 +35,4 @@ CONFIG += sailfishapp_i18n
 # planning to localize your app, remember to comment out the
 # following TRANSLATIONS line. And also do not forget to
 # modify the localized app name in the the .desktop file.
-TRANSLATIONS += translations/picoplayer-de.ts
+# TRANSLATIONS += translations/picoplayer-de.ts

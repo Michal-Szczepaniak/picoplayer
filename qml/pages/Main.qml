@@ -6,6 +6,10 @@ import "../dialogs"
 Page {
     id: page
 
+    PageHeader {
+        title: "Pico Player"
+    }
+
     Column {
         anchors.centerIn: parent
         spacing: Theme.paddingLarge
