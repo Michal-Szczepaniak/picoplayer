@@ -8,17 +8,30 @@ Page {
     id: page
 
     allowedOrientations: Orientation.All
-    showNavigationIndicator: !(!_controlsVisible && page.orientation === Orientation.Landscape)
+    showNavigationIndicator: _controlsVisible
 
     property string url
     property bool isLocal
     property bool _controlsVisible: true
 
-    Component.onCompleted: mediaPlayer.videoPlay()
+
+    Timer {
+        id: hideControlsAutomatically
+        interval: 3000
+        running: false
+        repeat: false
+        onTriggered: _controlsVisible = false
+    }
+
+    Component.onCompleted: {
+        showHideControls()
+        hideControlsAutomatically.restart()
+    }
 
     function showHideControls() {
         if (_controlsVisible) {
             showAnimation.start()
+            hideControlsAutomatically.restart()
         } else {
             hideAnimation.start()
         }
@@ -70,10 +83,6 @@ Page {
                 property string errorMsg: ""
 
                 onPlaybackStateChanged: {
-                    if (mediaPlayer.playbackState == MediaPlayer.StoppedState) {
-                        app.playing = ""
-                    }
-
                     mprisPlayer.playbackState = mediaPlayer.playbackState === MediaPlayer.PlayingState ?
                                 Mpris.Playing : mediaPlayer.playbackState === MediaPlayer.PausedState ?
                                     Mpris.Paused : Mpris.Stopped
@@ -98,7 +107,7 @@ Page {
                     }
                 }
 
-                onPositionChanged: proggress.value = mediaPlayer.position
+                onPositionChanged: progressBar.value = mediaPlayer.position
             }
 
             VideoOutput {
@@ -177,19 +186,13 @@ Page {
                 }
 
                 Slider {
-                    id: proggress
+                    id: progressBar
                     minimumValue: 0
                     maximumValue: mediaPlayer.duration
-                    anchors.left: videoOutput.left
-                    anchors.right: videoOutput.right
+                    anchors.left: progress.right
+                    anchors.right: duration.left
                     anchors.bottom: videoOutput.bottom
                     visible: _controlsVisible
-
-                    Behavior on value {
-                        NumberAnimation {
-                            duration: 10
-                        }
-                    }
 
                     NumberAnimation on opacity {
                         id: showAnimation3
@@ -203,7 +206,7 @@ Page {
                         duration: 100
                     }
 
-                    onValueChanged: down && mediaPlayer.seek(proggress.value)
+                    onReleased: mediaPlayer.seek(progressBar.value)
                 }
             }
 

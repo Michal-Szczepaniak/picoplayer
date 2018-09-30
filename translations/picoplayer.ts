@@ -20,16 +20,16 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Thanks to</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Donate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>All donations go for Verdanditeam devices
  (used for porting SailfishOS)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pico Player</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
