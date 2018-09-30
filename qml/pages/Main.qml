@@ -32,6 +32,7 @@ Page {
         Button {
             text: "About"
             width: streamButton.width
+            onClicked: pageStack.push(Qt.resolvedUrl("About.qml"))
         }
     }
 

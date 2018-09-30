@@ -18,12 +18,13 @@ SOURCES += src/picoplayer.cpp
 
 DISTFILES += qml/picoplayer.qml \
     qml/cover/CoverPage.qml \
+    qml/dialogs/UrlStreamPickerDialog.qml \
+    qml/pages/Main.qml \
+    qml/pages/VideoPlayer.qml \
+    qml/pages/About.qml \
     rpm/picoplayer.spec \
     translations/*.ts \
-    picoplayer.desktop \
-    qml/pages/Main.qml \
-    qml/dialogs/UrlStreamPickerDialog.qml \
-    qml/pages/VideoPlayer.qml
+    picoplayer.desktop
 
 SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172
 
