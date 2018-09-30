@@ -5,6 +5,11 @@ import "../dialogs"
 
 Page {
     id: page
+    allowedOrientations: Orientation.All
+
+    Component.onCompleted: {
+        console.log("QML: Open URL: " + launchArgs);
+    }
 
     PageHeader {
         title: "Pico Player"
@@ -25,7 +30,7 @@ Page {
             id: streamButton
             text: "Open URL Stream…"
             onClicked: {
-                var dialog = pageStack.push(Qt.resolvedUrl("../dialogs/UrlStreamPickerDialog.qml"))
+                pageStack.push(urlPickerPage)
             }
         }
 
@@ -40,8 +45,33 @@ Page {
         id: videoPickerPage
         FilePickerPage {
             onSelectedContentPropertiesChanged: {
-                pageStack.push(Qt.resolvedUrl("VideoPlayer.qml"), {url: selectedContentProperties.filePath})
+                pageStack.push(Qt.resolvedUrl("VideoPlayer.qml"), {url: selectedContentProperties.filePath, isLocal: true})
             }
         }
+    }
+
+    Component {
+        id: urlPickerPage
+        Dialog {
+            allowedOrientations: Orientation.All
+//            acceptDestination: Qt.resolvedUrl("VideoPlayer.qml")
+
+            onAccepted: pageStack.push(Qt.resolvedUrl("VideoPlayer.qml"), {url: urlField.text, isLocal: false})
+
+            Column {
+                width: parent.width
+
+                DialogHeader { }
+
+                TextField {
+                    id: urlField
+                    width: parent.width
+                    placeholderText: "https://…"
+                    label: "Stream URL"
+                    focus: true
+                }
+            }
+        }
+
     }
 }

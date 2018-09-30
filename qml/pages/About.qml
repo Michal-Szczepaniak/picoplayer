@@ -44,14 +44,14 @@ Page {
             width: parent.width
 
             Image {
-                source: "/usr/share/icons/hicolor/172x172/apps/microtube.png"
+                source: "/usr/share/icons/hicolor/172x172/apps/picoplayer.png"
                 width: 2/3 * parent.width
                 fillMode: Image.PreserveAspectFit
                 anchors.horizontalCenter: parent.horizontalCenter
             }
 
             Label {
-                text: "microtube"
+                text: "picoplayer"
                 font.pixelSize: Theme.fontSizeExtraLarge
                 anchors.horizontalCenter: parent.horizontalCenter
             }
@@ -81,7 +81,7 @@ Page {
             }
 
             Text {
-                text: "Github: <a href=\"https://github.com/Michal-Szczepaniak/microtube\">github.com/Michal-Szczepaniak/microtube</a>"
+                text: "Github: <a href=\"https://github.com/Michal-Szczepaniak/microtube\">github.com/Michal-Szczepaniak/picoplayer</a>"
                 color: "white"
                 textFormat: Text.StyledText
                 font.pixelSize: Theme.fontSizeSmall
@@ -108,24 +108,6 @@ Page {
                 width: parent.width
                 color: Theme.primaryColor
                 horizontalAlignment: Qt.AlignHCenter
-            }
-
-            Label {
-                text: qsTr("Thanks to")
-                font.pixelSize: Theme.fontSizeLarge
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-
-            Text {
-                text: "<a href=\"https://github.com/flaviotordini/minitube\">flaviotordini/minitube</a>"
-                color: "white"
-                textFormat: Text.StyledText
-                font.pixelSize: Theme.fontSizeSmall
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: parent.width
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                horizontalAlignment: Text.AlignHCenter
-                linkColor: Theme.highlightColor
             }
 
             Separator {
