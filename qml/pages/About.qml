@@ -57,13 +57,19 @@ Page {
             }
 
             Label {
-                text: qsTr("Made by Michał Szczepaniak. Based on minitube.")
+                text: qsTr("Made by Michał Szczepaniak.")
                 font.pixelSize: Theme.fontSizeSmall
                 anchors.horizontalCenter: parent.horizontalCenter
             }
 
             Label {
-                text: qsTr("Licensed under GPLv3")
+                text: qsTr("Licensed under WTFPL")
+                font.pixelSize: Theme.fontSizeSmall
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
+            Label {
+                text: qsTr("Lipstick components licensed under LGPL v2.1")
                 font.pixelSize: Theme.fontSizeSmall
                 anchors.horizontalCenter: parent.horizontalCenter
             }

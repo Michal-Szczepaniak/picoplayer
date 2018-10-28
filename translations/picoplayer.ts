@@ -8,14 +8,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Made by Michał Szczepaniak. Based on minitube.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Licensed under GPLv3</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Links</source>
         <translation type="unfinished"></translation>
     </message>
@@ -30,6 +22,18 @@
     </message>
     <message>
         <source>Pico Player</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Made by Michał Szczepaniak.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Licensed under WTFPL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lipstick components licensed under LGPL v2.1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
