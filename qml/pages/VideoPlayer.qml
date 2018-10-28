@@ -48,6 +48,11 @@ Page {
         onTriggered: brightnessSlider.visible = false
     }
 
+    Component.onDestruction: {
+        displaySettings.autoBrightnessEnabled = autoBrightness
+        displaySettings.brightness = inactiveBrightness
+    }
+
     Component.onCompleted: {
         showHideControls()
         hideControlsAutomatically.restart()
