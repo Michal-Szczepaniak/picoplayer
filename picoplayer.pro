@@ -12,9 +12,19 @@
 # The name of your application
 TARGET = picoplayer
 
-CONFIG += sailfishapp
+CONFIG += link_pkgconfig sailfishapp
+PKGCONFIG += \
+    dbus-1 \
+    dbus-glib-1
 
-SOURCES += src/picoplayer.cpp
+QT += dbus
+
+HEADERS += \
+    src/volume/pulseaudiocontrol.h
+
+SOURCES += \
+    src/picoplayer.cpp \
+    src/volume/pulseaudiocontrol.cpp
 
 DISTFILES += qml/picoplayer.qml \
     qml/cover/CoverPage.qml \
