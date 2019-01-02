@@ -59,6 +59,7 @@ Page {
         autoBrightness = displaySettings.autoBrightnessEnabled
         displaySettings.autoBrightnessEnabled = false
         inactiveBrightness = displaySettings.brightness
+        activeBrightness = displaySettings.brightness
     }
 
     function showHideControls() {
