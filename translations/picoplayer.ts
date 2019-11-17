@@ -36,11 +36,61 @@
         <source>Lipstick components licensed under LGPL v2.1</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Thanks to</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quenty31 for french translation.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CoverPage</name>
     <message>
         <source>picoplayer</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Main</name>
+    <message>
+        <source>Open file…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open URL Stream…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stream URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>VideoPlayer</name>
+    <message>
+        <source>Error: Problem with allocating resources</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: Media service error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: Video or Audio format is not supported</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: Access denied to the video</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: Network error</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
