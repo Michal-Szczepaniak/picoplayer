@@ -5,6 +5,7 @@ import Sailfish.Media 1.0
 import org.nemomobile.mpris 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
+import Nemo.KeepAlive 1.2
 
 
 Page {
@@ -19,9 +20,16 @@ Page {
     property int autoBrightness: -1
     property int inactiveBrightness: -1
     property int activeBrightness: -1
+    property bool landscape: true
 
     DisplaySettings {
         id: displaySettings
+        onBrightnessChanged: {
+            if (inactiveBrightness === -1) {
+                inactiveBrightness = brightness
+                activeBrightness = brightness
+            }
+        }
     }
 
     Timer {
@@ -37,7 +45,10 @@ Page {
         interval: 500
         running: false
         repeat: false
-        onTriggered: volumeSlider.visible = false
+        onTriggered: {
+            volumeSlider.visible = false
+            volumeIndicator.visible = false
+        }
     }
 
     Timer {
@@ -45,7 +56,10 @@ Page {
         interval: 500
         running: false
         repeat: false
-        onTriggered: brightnessSlider.visible = false
+        onTriggered: {
+            brightnessSlider.visible = false
+            brightnessIndicator.visible = false
+        }
     }
 
     Component.onDestruction: {
@@ -144,11 +158,11 @@ Page {
                 }
 
                 onError: {
-                    if ( error === MediaPlayer.ResourceError ) errorMsg = "Error: Problem with allocating resources"
-                    else if ( error === MediaPlayer.ServiceMissing ) errorMsg = "Error: Media service error"
-                    else if ( error === MediaPlayer.FormatError ) errorMsg = "Error: Video or Audio format is not supported"
-                    else if ( error === MediaPlayer.AccessDenied ) errorMsg = "Error: Access denied to the video"
-                    else if ( error === MediaPlayer.NetworkError ) errorMsg = "Error: Network error"
+                    if ( error === MediaPlayer.ResourceError ) errorMsg = qsTr("Error: Problem with allocating resources")
+                    else if ( error === MediaPlayer.ServiceMissing ) errorMsg = qsTr("Error: Media service error")
+                    else if ( error === MediaPlayer.FormatError ) errorMsg = qsTr("Error: Video or Audio format is not supported")
+                    else if ( error === MediaPlayer.AccessDenied ) errorMsg = qsTr("Error: Access denied to the video")
+                    else if ( error === MediaPlayer.NetworkError ) errorMsg = qsTr("Error: Network error")
                     stop()
                 }
 
@@ -162,7 +176,7 @@ Page {
                     }
                 }
 
-                onPositionChanged: progressBar.value = mediaPlayer.position
+                onPositionChanged: progressSlider.value = mediaPlayer.position
             }
 
             VideoOutput {
@@ -200,45 +214,223 @@ Page {
                     property int offset: page.height/20
                     property int offsetHeight: height - (offset*2)
                     property int step: offsetHeight / 10
+                    property bool stepChanged: false
                     property int brightnessStep: displaySettings.maximumBrightness / 10
                     property int lambdaVolumeStep: -1
                     property int lambdaBrightnessStep: -1
+                    property int currentVolume: -1
+
+                    Timer{
+                        id: doubleClickTimer
+                        interval: 200
+                    }
 
                     function calculateStep(mouse) {
                         return Math.round((offsetHeight - (mouse.y-offset)) / step)
                     }
 
                     onReleased: {
-                        if(lambdaVolumeStep === -1 && lambdaBrightnessStep === -1)
-                            _controlsVisible = !_controlsVisible
-                        lambdaVolumeStep = -1
-                        lambdaBrightnessStep = -1
+                        if (doubleClickTimer.running) doubleClicked(mouse)
+                        if (!doubleClickTimer.running) doubleClickTimer.start()
+                        if (!stepChanged) _controlsVisible = !_controlsVisible
+
+                        if ( landscape ) {
+                            lambdaVolumeStep = -1
+                            lambdaBrightnessStep = -1
+                            stepChanged = false
+                        }
+                    }
+
+                    onPressed: {
+                        if ( landscape ) {
+                            pacontrol.update()
+                            lambdaBrightnessStep = lambdaVolumeStep = calculateStep(mouse)
+                        }
+                    }
+
+                    function doubleClicked(mouse) {
+                        if ( landscape ) {
+                            var newPos = null
+                            if(mouse.x < mousearea.width/2 ) {
+                                newPos = mediaPlayer.position - 5000
+                                if(newPos < 0) newPos = 0
+                                mediaPlayer.seek(newPos)
+                                backwardIndicator.visible = true
+                            } else if (mouse.x > mousearea.width/2) {
+                                newPos = mediaPlayer.position + 5000
+                                if(newPos > mediaPlayer.duration) {
+                                    mediaPlayer.nextVideo()
+                                    return
+                                }
+                                mediaPlayer.seek(newPos)
+                                forwardIndicator.visible = true
+                            }
+                        }
+                    }
+
+                    Connections {
+                        target: pacontrol
+                        onVolumeChanged: {
+                            mousearea.currentVolume = volume
+                            if (volume > 10) {
+                                mousearea.currentVolume = 10
+                            } else if (volume < 0) {
+                                mousearea.currentVolume = 0
+                            }
+                        }
                     }
 
                     onPositionChanged: {
-                        var step = calculateStep(mouse)
-                        if((mouse.y - offset) > 0 && (mouse.y - offset) < offsetHeight && mouse.x < mousearea.width/2 && lambdaVolumeStep !== step) {
-                            lambdaVolumeStep = step
-                            pacontrol.setVolume(lambdaVolumeStep)
-                            volumeSlider.value = lambdaVolumeStep
-                            volumeSlider.visible = true
-                            hideVolumeSlider.restart()
-                        } else if ((mouse.y - offset) > 0 && (mouse.y - offset) < offsetHeight && mouse.x > mousearea.width/2 && lambdaBrightnessStep !== step) {
-                            lambdaBrightnessStep = step
-                            displaySettings.brightness = lambdaBrightnessStep * brightnessStep
-                            brightnessSlider.value = lambdaBrightnessStep
-                            brightnessSlider.visible = true
-                            hideBrightnessSlider.restart()
+                        if ( landscape ) {
+                            var step = calculateStep(mouse)
+                            if((mouse.y - offset) > 0 && (mouse.y + offset) < offsetHeight && mouse.x < mousearea.width/2 && lambdaVolumeStep !== step) {
+                                pacontrol.setVolume(currentVolume - (lambdaVolumeStep - step))
+                                volumeSlider.value = currentVolume - (lambdaVolumeStep - step)
+                                lambdaVolumeStep = step
+                                volumeSlider.visible = true
+                                volumeIndicator.visible = true
+                                hideVolumeSlider.restart()
+                                pacontrol.update()
+                                stepChanged = true
+                            } else if ((mouse.y - offset) > 0 && (mouse.y + offset) < offsetHeight && mouse.x > mousearea.width/2 && lambdaBrightnessStep !== step) {
+                                var relativeStep = Math.round(displaySettings.brightness/brightnessStep) - (lambdaBrightnessStep - step)
+                                if (relativeStep > 10) relativeStep = 10;
+                                if (relativeStep < 0) relativeStep = 0;
+                                displaySettings.brightness = relativeStep * brightnessStep
+                                activeBrightness = relativeStep * brightnessStep
+                                lambdaBrightnessStep = step
+                                brightnessSlider.value = relativeStep
+                                brightnessSlider.visible = true
+                                brightnessIndicator.visible = true
+                                hideBrightnessSlider.restart()
+                                stepChanged = true
+                            }
                         }
                     }
                 }
 
+                Row {
+                    id: volumeIndicator
+                    anchors.centerIn: parent
+                    visible: false
+                    spacing: Theme.paddingLarge
+
+                    Image {
+                        width: Theme.itemSizeLarge
+                        height: Theme.itemSizeLarge
+                        source: "image://theme/icon-m-speaker-on"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Label {
+                        text: (mousearea.currentVolume * 10) + "%"
+                        font.pixelSize: Theme.fontSizeHuge
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                Row {
+                    id: brightnessIndicator
+                    anchors.centerIn: parent
+                    visible: false
+                    spacing: Theme.paddingLarge
+
+                    Image {
+                        width: Theme.itemSizeLarge
+                        height: Theme.itemSizeLarge
+                        source: "image://theme/icon-m-light-contrast"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Label {
+                        text: (Math.round(displaySettings.brightness/mousearea.brightnessStep) * 10) + "%"
+                        font.pixelSize: Theme.fontSizeHuge
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                Row {
+                    id: backwardIndicator
+                    anchors.centerIn: parent
+                    visible: false
+                    spacing: -Theme.paddingLarge*2
+
+                    Image {
+                        id: prev1
+                        width: Theme.itemSizeLarge
+                        height: Theme.itemSizeLarge
+                        anchors.verticalCenter: parent.verticalCenter
+                        fillMode: Image.PreserveAspectFit
+                        source: "image://theme/icon-cover-play"
+
+                        transform: Rotation{
+                            angle: 180
+                            origin.x: prev1.width/2
+                            origin.y: prev1.height/2
+                        }
+                    }
+                    Image {
+                        id: prev2
+                        width: Theme.itemSizeLarge
+                        height: Theme.itemSizeLarge
+                        anchors.verticalCenter: parent.verticalCenter
+                        fillMode: Image.PreserveAspectFit
+                        source: "image://theme/icon-cover-play"
+
+                        transform: Rotation{
+                            angle: 180
+                            origin.x: prev2.width/2
+                            origin.y: prev2.height/2
+                        }
+                    }
+
+                    Timer {
+                        id: hideBackward
+                        interval: 300
+                        onTriggered: backwardIndicator.visible = false
+                    }
+
+                    onVisibleChanged: if (backwardIndicator.visible) hideBackward.start()
+                }
+
+                Row {
+                    id: forwardIndicator
+                    anchors.centerIn: parent
+                    visible: false
+                    spacing: -Theme.paddingLarge*2
+
+                    Image {
+                        width: Theme.itemSizeLarge
+                        height: Theme.itemSizeLarge
+                        anchors.verticalCenter: parent.verticalCenter
+                        fillMode: Image.PreserveAspectFit
+                        source: "image://theme/icon-cover-play"
+
+                    }
+                    Image {
+                        width: Theme.itemSizeLarge
+                        height: Theme.itemSizeLarge
+                        anchors.verticalCenter: parent.verticalCenter
+                        fillMode: Image.PreserveAspectFit
+                        source: "image://theme/icon-cover-play"
+                    }
+
+                    Timer {
+                        id: hideForward
+                        interval: 300
+                        onTriggered: forwardIndicator.visible = false
+                    }
+
+                    onVisibleChanged: if (forwardIndicator.visible) hideForward.start()
+                }
+
                 Label {
                     id: progress
+                    width: Theme.itemSizeExtraSmall
                     anchors.left: parent.left
                     anchors.bottom: parent.bottom
                     anchors.margins: Theme.paddingLarge
-                    text:  Format.formatDuration(Math.round(mediaPlayer.position/1000), Formatter.DurationShort)
+                    text:  Format.formatDuration(Math.round(mediaPlayer.position/1000), ((mediaPlayer.duration/1000) > 3600 ? Formatter.DurationLong : Formatter.DurationShort))
                 }
 
                 Label {
@@ -246,19 +438,19 @@ Page {
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     anchors.margins: Theme.paddingLarge
-                    text: Format.formatDuration(Math.round(mediaPlayer.duration/1000), Formatter.DurationShort)
+                    text: Format.formatDuration(Math.round(mediaPlayer.duration/1000), ((mediaPlayer.duration/1000) > 3600 ? Formatter.DurationLong : Formatter.DurationShort))
                 }
 
                 NumberAnimation {
                     id: showAnimation
-                    targets: [progress, duration, playButton]
+                    targets: [progress, duration, playButton, prevButton, nextButton]
                     properties: "opacity"
                     to: 1
                     duration: 100
                 }
                 NumberAnimation {
                     id: hideAnimation
-                    targets: [progress, duration, playButton]
+                    targets: [progress, duration, playButton, prevButton, nextButton]
                     properties: "opacity"
                     to: 0
                     duration: 100
@@ -270,6 +462,26 @@ Page {
                     icon.source: mediaPlayer.playbackState == MediaPlayer.PlayingState ? "image://theme/icon-m-pause" : "image://theme/icon-m-play"
                     anchors.centerIn: parent
                     onClicked: mediaPlayer.playbackState == MediaPlayer.PlayingState ? mediaPlayer.videoPause() : mediaPlayer.videoPlay()
+                }
+
+                IconButton {
+                    id: nextButton
+                    enabled: opacity != 0
+                    icon.source: "image://theme/icon-m-next"
+                    anchors.top: playButton.top
+                    anchors.left: playButton.right
+                    anchors.leftMargin: page.width/4 - playButton.width/2
+                    onClicked: mediaPlayer.nextVideo()
+                }
+
+                IconButton {
+                    id: prevButton
+                    enabled: opacity != 0
+                    icon.source: "image://theme/icon-m-previous"
+                    anchors.top: playButton.top
+                    anchors.right: playButton.left
+                    anchors.rightMargin: page.width/4 - playButton.width/2
+                    onClicked: mediaPlayer.prevVideo()
                 }
 
                 Slider {
@@ -298,9 +510,6 @@ Page {
                     enabled: false
                     maximumValue: 10
                     minimumValue: 0
-                    onValueChanged: {
-                        activeBrightness = value
-                    }
 
                     Behavior on opacity {
                         PropertyAction {}
@@ -308,12 +517,16 @@ Page {
                 }
 
                 Slider {
-                    id: progressBar
+                    id: progressSlider
+                    value: mediaPlayer.position
                     minimumValue: 0
                     maximumValue: mediaPlayer.duration
-                    anchors.left: progress.right
-                    anchors.right: duration.left
+                    anchors.left: page.landscape ? progress.right : videoOutput.left
+                    anchors.right: page.landscape ? duration.left : videoOutput.right
                     anchors.bottom: videoOutput.bottom
+                    anchors.bottomMargin: page.landscape ? 0 : -progressSlider.height/2
+                    anchors.leftMargin: page.landscape ? -Theme.paddingLarge*2 : -Theme.paddingLarge*4
+                    anchors.rightMargin: page.landscape ? -Theme.paddingLarge*2 : -Theme.paddingLarge*4
                     visible: _controlsVisible
 
                     NumberAnimation on opacity {
@@ -328,12 +541,12 @@ Page {
                         duration: 100
                     }
 
-                    onReleased: mediaPlayer.seek(progressBar.value)
+                    onReleased: mediaPlayer.seek(progressSlider.value)
                 }
             }
 
-            ScreenBlank {
-                suspend: mediaPlayer.playbackState == MediaPlayer.PlayingState
+            DisplayBlanking {
+                preventBlanking: mediaPlayer.playbackState == MediaPlayer.PlayingState
             }
         }
     }

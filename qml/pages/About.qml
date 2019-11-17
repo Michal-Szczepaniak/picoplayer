@@ -116,6 +116,18 @@ Page {
                 horizontalAlignment: Qt.AlignHCenter
             }
 
+            Label {
+                text: qsTr("Thanks to")
+                font.pixelSize: Theme.fontSizeLarge
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
+            Label {
+                text: qsTr("Quenty31 for french translation.")
+                font.pixelSize: Theme.fontSizeSmall
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
             Separator {
                 width: parent.width
                 color: Theme.primaryColor

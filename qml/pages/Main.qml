@@ -26,21 +26,21 @@ Page {
 
 
         Button {
-            text: "Open file…"
+            text: qsTr("Open file…")
             width: streamButton.width
             onClicked: pageStack.push(videoPickerPage)
         }
 
         Button {
             id: streamButton
-            text: "Open URL Stream…"
+            text: qsTr("Open URL Stream…")
             onClicked: {
                 pageStack.push(urlPickerPage)
             }
         }
 
         Button {
-            text: "About"
+            text: qsTr("About")
             width: streamButton.width
             onClicked: pageStack.push(Qt.resolvedUrl("About.qml"))
         }
@@ -72,7 +72,7 @@ Page {
                     id: urlField
                     width: parent.width
                     placeholderText: "https://…"
-                    label: "Stream URL"
+                    label: qsTr("Stream URL")
                     focus: true
                 }
             }
