@@ -51,7 +51,7 @@ Page {
             }
 
             Label {
-                text: qsTr("Pico Player")
+                text: "Pico Player 1.3"
                 font.pixelSize: Theme.fontSizeExtraLarge
                 anchors.horizontalCenter: parent.horizontalCenter
             }

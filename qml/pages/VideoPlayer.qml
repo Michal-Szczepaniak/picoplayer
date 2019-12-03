@@ -21,6 +21,7 @@ Page {
     property int inactiveBrightness: -1
     property int activeBrightness: -1
     property bool landscape: true
+    property bool fillMode: false
 
     DisplaySettings {
         id: displaySettings
@@ -28,6 +29,8 @@ Page {
             if (inactiveBrightness === -1) {
                 inactiveBrightness = brightness
                 activeBrightness = brightness
+                autoBrightness = displaySettings.autoBrightnessEnabled
+                displaySettings.autoBrightnessEnabled = false
             }
         }
     }
@@ -68,12 +71,9 @@ Page {
     }
 
     Component.onCompleted: {
+        Theme.setColorScheme("dark")
         showHideControls()
         hideControlsAutomatically.restart()
-        autoBrightness = displaySettings.autoBrightnessEnabled
-        displaySettings.autoBrightnessEnabled = false
-        inactiveBrightness = displaySettings.brightness
-        activeBrightness = displaySettings.brightness
     }
 
     function showHideControls() {
@@ -181,10 +181,11 @@ Page {
 
             VideoOutput {
                 id: videoOutput
-                anchors.fill: parent
                 width : page.width
-                height: page.width/1.777777777777778
                 source: mediaPlayer
+                anchors.centerIn: parent
+                height: landscape ? (page.fillMode ? page.width : page.height) : page.width/1.777777777777778
+
 
                 Rectangle {
                     id: errorPane
@@ -424,33 +425,16 @@ Page {
                     onVisibleChanged: if (forwardIndicator.visible) hideForward.start()
                 }
 
-                Label {
-                    id: progress
-                    width: Theme.itemSizeExtraSmall
-                    anchors.left: parent.left
-                    anchors.bottom: parent.bottom
-                    anchors.margins: Theme.paddingLarge
-                    text:  Format.formatDuration(Math.round(mediaPlayer.position/1000), ((mediaPlayer.duration/1000) > 3600 ? Formatter.DurationLong : Formatter.DurationShort))
-                }
-
-                Label {
-                    id: duration
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.margins: Theme.paddingLarge
-                    text: Format.formatDuration(Math.round(mediaPlayer.duration/1000), ((mediaPlayer.duration/1000) > 3600 ? Formatter.DurationLong : Formatter.DurationShort))
-                }
-
                 NumberAnimation {
                     id: showAnimation
-                    targets: [progress, duration, playButton, prevButton, nextButton]
+                    targets: [progress, duration, playButton, prevButton, nextButton, fillModeButton]
                     properties: "opacity"
                     to: 1
                     duration: 100
                 }
                 NumberAnimation {
                     id: hideAnimation
-                    targets: [progress, duration, playButton, prevButton, nextButton]
+                    targets: [progress, duration, playButton, prevButton, nextButton, fillModeButton]
                     properties: "opacity"
                     to: 0
                     duration: 100
@@ -483,70 +467,94 @@ Page {
                     anchors.rightMargin: page.width/4 - playButton.width/2
                     onClicked: mediaPlayer.prevVideo()
                 }
-
-                Slider {
-                    id: volumeSlider
-                    visible: false
-                    x: page.width - height
-                    y: page.height
-                    width: page.height
-                    minimumValue: 0
-                    maximumValue: 10
-                    transform: Rotation { angle: -90}
-                    enabled: false
-
-                    Behavior on opacity {
-                        PropertyAction {}
-                    }
-                }
-
-                Slider {
-                    id: brightnessSlider
-                    visible: false
-                    x: 0
-                    y: page.height
-                    width: page.height
-                    transform: Rotation { angle: -90}
-                    enabled: false
-                    maximumValue: 10
-                    minimumValue: 0
-
-                    Behavior on opacity {
-                        PropertyAction {}
-                    }
-                }
-
-                Slider {
-                    id: progressSlider
-                    value: mediaPlayer.position
-                    minimumValue: 0
-                    maximumValue: mediaPlayer.duration
-                    anchors.left: page.landscape ? progress.right : videoOutput.left
-                    anchors.right: page.landscape ? duration.left : videoOutput.right
-                    anchors.bottom: videoOutput.bottom
-                    anchors.bottomMargin: page.landscape ? 0 : -progressSlider.height/2
-                    anchors.leftMargin: page.landscape ? -Theme.paddingLarge*2 : -Theme.paddingLarge*4
-                    anchors.rightMargin: page.landscape ? -Theme.paddingLarge*2 : -Theme.paddingLarge*4
-                    visible: _controlsVisible
-
-                    NumberAnimation on opacity {
-                        id: showAnimation3
-                        to: 1
-                        duration: 100
-
-                    }
-                    NumberAnimation on opacity {
-                        id: hideAnimation3
-                        to: 0
-                        duration: 100
-                    }
-
-                    onReleased: mediaPlayer.seek(progressSlider.value)
-                }
             }
 
             DisplayBlanking {
                 preventBlanking: mediaPlayer.playbackState == MediaPlayer.PlayingState
+            }
+
+            Slider {
+                id: volumeSlider
+                visible: false
+                x: page.width - height
+                y: page.height
+                width: page.height
+                minimumValue: 0
+                maximumValue: 10
+                transform: Rotation { angle: -90}
+                enabled: false
+
+                Behavior on opacity {
+                    PropertyAction {}
+                }
+            }
+
+            Slider {
+                id: brightnessSlider
+                visible: false
+                x: 0
+                y: page.height
+                width: page.height
+                transform: Rotation { angle: -90}
+                enabled: false
+                maximumValue: 10
+                minimumValue: 0
+
+                Behavior on opacity {
+                    PropertyAction {}
+                }
+            }
+
+            Label {
+                id: progress
+                width: Theme.itemSizeExtraSmall
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                anchors.margins: Theme.paddingLarge
+                text:  Format.formatDuration(Math.round(mediaPlayer.position/1000), ((mediaPlayer.duration/1000) > 3600 ? Formatter.DurationLong : Formatter.DurationShort))
+            }
+
+            Label {
+                id: duration
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: Theme.paddingLarge
+                text: Format.formatDuration(Math.round(mediaPlayer.duration/1000), ((mediaPlayer.duration/1000) > 3600 ? Formatter.DurationLong : Formatter.DurationShort))
+            }
+
+            Slider {
+                id: progressSlider
+                value: mediaPlayer.position
+                minimumValue: 0
+                maximumValue: mediaPlayer.duration
+                anchors.bottom: parent.bottom
+                x: progress.width
+                width: parent.width - progress.width - duration.width
+                visible: _controlsVisible
+
+                NumberAnimation on opacity {
+                    id: showAnimation3
+                    to: 1
+                    duration: 100
+
+                }
+                NumberAnimation on opacity {
+                    id: hideAnimation3
+                    to: 0
+                    duration: 100
+                }
+
+                onReleased: mediaPlayer.seek(progressSlider.value)
+            }
+
+            IconButton {
+                id: fillModeButton
+                visible: opacity != 0 && landscape
+                icon.source: page.fillMode ? "image://theme/icon-m-scale" : "image://theme/icon-m-tablet"
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: Theme.paddingMedium
+                onClicked: page.fillMode = !page.fillMode
             }
         }
     }
