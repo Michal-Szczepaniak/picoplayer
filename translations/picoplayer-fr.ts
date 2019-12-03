@@ -38,11 +38,11 @@
     </message>
     <message>
         <source>Thanks to</source>
-        <translation type="unfinished"></translation>
+        <translation>Merci à</translation>
     </message>
     <message>
         <source>Quenty31 for french translation.</source>
-        <translation type="unfinished"></translation>
+        <translation>Quenty pour la traduction française</translation>
     </message>
 </context>
 <context>
@@ -56,42 +56,42 @@
     <name>Main</name>
     <message>
         <source>Open file…</source>
-        <translation type="unfinished"></translation>
+        <translation>Ouvrir le fichier…</translation>
     </message>
     <message>
         <source>Open URL Stream…</source>
-        <translation type="unfinished"></translation>
+        <translation>Ouvrir un flux réseau…</translation>
     </message>
     <message>
         <source>About</source>
-        <translation type="unfinished">À propos</translation>
+        <translation>À propos</translation>
     </message>
     <message>
         <source>Stream URL</source>
-        <translation type="unfinished"></translation>
+        <translation>URL flux réseau</translation>
     </message>
 </context>
 <context>
     <name>VideoPlayer</name>
     <message>
         <source>Error: Problem with allocating resources</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur : problème d'allocation des ressources</translation>
     </message>
     <message>
         <source>Error: Media service error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur : erreur du service multimédia</translation>
     </message>
     <message>
         <source>Error: Video or Audio format is not supported</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur : le format vidéo ou audio n'est pas supporté</translation>
     </message>
     <message>
         <source>Error: Access denied to the video</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur : accès refusé à la vidéo</translation>
     </message>
     <message>
         <source>Error: Network error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur : erreur réseau</translation>
     </message>
 </context>
 </TS>
