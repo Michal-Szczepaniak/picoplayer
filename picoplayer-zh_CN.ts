@@ -30,7 +30,7 @@
     </message>
     <message>
         <source>Licensed under WTFPL</source>
-        <translation>采用 WTFRL 许可协议</translation>
+        <translation>采用 WTFPL 许可协议</translation>
     </message>
     <message>
         <source>Lipstick components licensed under LGPL v2.1</source>
