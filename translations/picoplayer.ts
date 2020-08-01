@@ -21,10 +21,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Pico Player</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Made by Michał Szczepaniak.</source>
         <translation type="unfinished"></translation>
     </message>

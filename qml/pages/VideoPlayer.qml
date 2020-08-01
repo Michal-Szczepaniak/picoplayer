@@ -11,7 +11,7 @@ import Nemo.KeepAlive 1.2
 Page {
     id: page
 
-    allowedOrientations: Orientation.All
+    allowedOrientations: app.videoCover && Qt.application.state === Qt.ApplicationInactive ? Orientation.Portrait : Orientation.All
     showNavigationIndicator: _controlsVisible
 
     property string url
@@ -66,11 +66,13 @@ Page {
     }
 
     Component.onDestruction: {
+        app.videoCover = false
         displaySettings.autoBrightnessEnabled = autoBrightness
         displaySettings.brightness = inactiveBrightness
     }
 
     Component.onCompleted: {
+        app.videoCover = true
         Theme.setColorScheme("dark")
         showHideControls()
         hideControlsAutomatically.restart()
@@ -550,7 +552,9 @@ Page {
             IconButton {
                 id: fillModeButton
                 visible: opacity != 0 && landscape
-                icon.source: page.fillMode ? "image://theme/icon-m-scale" : "image://theme/icon-m-tablet"
+                icon.source: page.fillMode ? "qrc:///images/icon-m-scale-to-16-9.svg" : "qrc:///images/icon-m-scale-to-21-9.svg"
+                width: Theme.itemSizeExtraSmall
+                height: width
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.margins: Theme.paddingMedium
@@ -558,7 +562,6 @@ Page {
             }
         }
     }
-
 
     CoverActionList {
         id: coverAction

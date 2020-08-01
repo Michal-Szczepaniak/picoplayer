@@ -21,10 +21,6 @@
         <translation>Tous les dons vont à Verdanditeam (utilisé pour le portage SailfishOS)</translation>
     </message>
     <message>
-        <source>Pico Player</source>
-        <translation>Pico Player</translation>
-    </message>
-    <message>
         <source>Made by Michał Szczepaniak.</source>
         <translation>Conçu par Michał Szczepaniak.</translation>
     </message>
@@ -75,7 +71,7 @@
     <name>VideoPlayer</name>
     <message>
         <source>Error: Problem with allocating resources</source>
-        <translation>Erreur : problème d'allocation des ressources</translation>
+        <translation>Erreur : problème d&apos;allocation des ressources</translation>
     </message>
     <message>
         <source>Error: Media service error</source>
@@ -83,7 +79,7 @@
     </message>
     <message>
         <source>Error: Video or Audio format is not supported</source>
-        <translation>Erreur : le format vidéo ou audio n'est pas supporté</translation>
+        <translation>Erreur : le format vidéo ou audio n&apos;est pas supporté</translation>
     </message>
     <message>
         <source>Error: Access denied to the video</source>
