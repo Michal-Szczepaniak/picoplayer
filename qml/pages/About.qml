@@ -51,7 +51,7 @@ Page {
             }
 
             Label {
-                text: "Pico Player 1.3"
+                text: "Pico Player 1.4"
                 font.pixelSize: Theme.fontSizeExtraLarge
                 anchors.horizontalCenter: parent.horizontalCenter
             }
@@ -123,10 +123,17 @@ Page {
             }
 
             Label {
-                text: qsTr("Quenty31 for french translation.")
+                text: qsTr("Quenty31 for French translation.")
                 font.pixelSize: Theme.fontSizeSmall
                 anchors.horizontalCenter: parent.horizontalCenter
             }
+
+            Label {
+                text: qsTr("dashinfantry for Chinese translation.")
+                font.pixelSize: Theme.fontSizeSmall
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
 
             Separator {
                 width: parent.width

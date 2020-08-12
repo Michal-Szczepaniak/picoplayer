@@ -2,6 +2,13 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="fr">
 <context>
+    <name></name>
+    <message id="No videos">
+        <source></source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>About</name>
     <message>
         <source>About</source>
@@ -37,8 +44,12 @@
         <translation>Merci à</translation>
     </message>
     <message>
-        <source>Quenty31 for french translation.</source>
-        <translation>Quenty pour la traduction française</translation>
+        <source>Quenty31 for French translation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>dashinfantry for Chinese translation.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

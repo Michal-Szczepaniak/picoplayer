@@ -30,7 +30,6 @@ Page {
                 inactiveBrightness = brightness
                 activeBrightness = brightness
                 autoBrightness = displaySettings.autoBrightnessEnabled
-                displaySettings.autoBrightnessEnabled = false
             }
         }
     }
@@ -71,11 +70,19 @@ Page {
         displaySettings.brightness = inactiveBrightness
     }
 
-    Component.onCompleted: {
-        app.videoCover = true
-        Theme.setColorScheme("dark")
-        showHideControls()
-        hideControlsAutomatically.restart()
+    onStatusChanged: {
+        if(status === PageStatus.Active) {
+            app.videoCover = true
+            Theme.setColorScheme("dark")
+            showHideControls()
+            hideControlsAutomatically.restart()
+            displaySettings.autoBrightnessEnabled = false
+        } else if (status === PageStatus.Inactive) {
+            app.videoCover = false
+            displaySettings.autoBrightnessEnabled = autoBrightness
+            displaySettings.brightness = inactiveBrightness
+            mediaPlayer.stop()
+        }
     }
 
     function showHideControls() {
@@ -135,6 +142,7 @@ Page {
             MediaPlayer {
                 id: mediaPlayer
                 source: url.trim()
+                autoLoad: true
 
                 function videoPlay() {
                     videoPlaying = true
@@ -187,7 +195,6 @@ Page {
                 source: mediaPlayer
                 anchors.centerIn: parent
                 height: landscape ? (page.fillMode ? page.width : page.height) : page.width/1.777777777777778
-
 
                 Rectangle {
                     id: errorPane

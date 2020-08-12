@@ -2,6 +2,13 @@
 <!DOCTYPE TS>
 <TS version="2.1">
 <context>
+    <name></name>
+    <message id="No videos">
+        <source></source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>About</name>
     <message>
         <source>About</source>
@@ -21,16 +28,12 @@
         <translation>所有的捐赠都将用于支持 Verdanditeam 设备（移植旗鱼系统）</translation>
     </message>
     <message>
-        <source>Pico Player</source>
-        <translation>Pico Player</translation>
-    </message>
-    <message>
         <source>Made by Michał Szczepaniak.</source>
         <translation>开发者为 Michał Szczepaniak 。</translation>
     </message>
     <message>
         <source>Licensed under WTFPL</source>
-        <translation>采用 WTFRL 许可协议</translation>
+        <translation>采用 WTFPL 许可协议</translation>
     </message>
     <message>
         <source>Lipstick components licensed under LGPL v2.1</source>
@@ -41,8 +44,12 @@
         <translation>感谢</translation>
     </message>
     <message>
-        <source>Quenty31 for french translation.</source>
-        <translation>Quenty31 提供法语翻译。</translation>
+        <source>Quenty31 for French translation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>dashinfantry for Chinese translation.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
