@@ -45,11 +45,11 @@
     </message>
     <message>
         <source>Quenty31 for French translation.</source>
-        <translation type="unfinished"></translation>
+        <translation>Quenty31 提供法语翻译。</translation>
     </message>
     <message>
         <source>dashinfantry for Chinese translation.</source>
-        <translation type="unfinished"></translation>
+        <translation>dashinfantry 提供汉语翻译。</translation>
     </message>
 </context>
 <context>
@@ -63,11 +63,11 @@
     <name>Main</name>
     <message>
         <source>Open file…</source>
-        <translation>正在打开文件……</translation>
+        <translation>打开文件…</translation>
     </message>
     <message>
         <source>Open URL Stream…</source>
-        <translation>正在打开 URL 流媒体……</translation>
+        <translation>打开 URL 流媒体…</translation>
     </message>
     <message>
         <source>About</source>
