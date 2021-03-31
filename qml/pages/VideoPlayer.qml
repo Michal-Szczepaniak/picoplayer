@@ -6,7 +6,7 @@ import org.nemomobile.mpris 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
 import Nemo.KeepAlive 1.2
-
+import QtSensors 5.0
 
 Page {
     id: page
@@ -21,15 +21,29 @@ Page {
     property int inactiveBrightness: -1
     property int activeBrightness: -1
     property bool landscape: true
+    property bool landscapeCover: (_orientation === OrientationReading.LeftUp || _orientation === OrientationReading.RightUp) && app.videoCover && Qt.application.state === Qt.ApplicationInactive
     property bool fillMode: false
+    property int _orientation: OrientationReading.TopUp
 
     DisplaySettings {
         id: displaySettings
         onBrightnessChanged: {
             if (inactiveBrightness === -1) {
+                console.log(brightness, typeof brightness)
                 inactiveBrightness = brightness
                 activeBrightness = brightness
                 autoBrightness = displaySettings.autoBrightnessEnabled
+            }
+        }
+    }
+
+    OrientationSensor {
+        id: orientationSensor
+        active: true
+
+        onReadingChanged: {
+            if (reading.orientation >= OrientationReading.TopUp && reading.orientation <= OrientationReading.RightUp) {
+                _orientation = reading.orientation
             }
         }
     }
@@ -121,13 +135,15 @@ Page {
     Connections {
         target: Qt.application
         onStateChanged: {
-            if ( state === Qt.ApplicationInactive ) {
-                displaySettings.autoBrightnessEnabled = autoBrightness
-                activeBrightness = brightnessSlider.value * mousearea.brightnessStep
-                displaySettings.brightness = inactiveBrightness
-            } else if ( state === Qt.ApplicationActive ) {
-                displaySettings.autoBrightnessEnabled = false
-                displaySettings.brightness = activeBrightness
+            if ( page.status === PageStatus.Active ) {
+                if ( state === Qt.ApplicationInactive ) {
+                    displaySettings.autoBrightnessEnabled = autoBrightness
+                    activeBrightness = brightnessSlider.value * mousearea.brightnessStep
+                    displaySettings.brightness = inactiveBrightness
+                } else if ( state === Qt.ApplicationActive ) {
+                    displaySettings.autoBrightnessEnabled = false
+                    displaySettings.brightness = activeBrightness
+                }
             }
         }
     }
@@ -136,13 +152,17 @@ Page {
         anchors.fill: parent
 
         Rectangle {
-            anchors.fill: parent
+            x: 0
+            y: 0
+            width: page.width
+            height: landscapeCover ? page.width*1.6 : page.height
             color: "black"
 
             MediaPlayer {
                 id: mediaPlayer
                 source: url.trim()
                 autoLoad: true
+                autoPlay: true
 
                 function videoPlay() {
                     videoPlaying = true
@@ -191,10 +211,19 @@ Page {
 
             VideoOutput {
                 id: videoOutput
-                width : page.width
+                width : landscapeCover ? page.width*1.6 : page.width
                 source: mediaPlayer
                 anchors.centerIn: parent
-                height: landscape ? (page.fillMode ? page.width : page.height) : page.width/1.777777777777778
+                height: landscapeCover
+                          ? page.width
+                          : (landscape ? (page.fillMode ? page.width : page.height) : page.width/1.777777777777778)
+                transform: Rotation {
+                    origin.x: (page.width*1.6)/2
+                    origin.y: page.width/2
+                    angle: landscapeCover
+                           ? (_orientation === OrientationReading.LeftUp ? -90 : 90)
+                           : 0
+                }
 
                 Rectangle {
                     id: errorPane
@@ -565,6 +594,8 @@ Page {
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.margins: Theme.paddingMedium
+                icon.width: width
+                icon.height: width
                 onClicked: page.fillMode = !page.fillMode
             }
         }
