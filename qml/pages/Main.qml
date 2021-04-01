@@ -90,7 +90,6 @@ Page {
         PullDownMenu {
             id: pullDownMenu
             enabled: !pinchArea.pinch.active
-            onEnabledChanged: console.log(enabled)
 
             MenuItem {
                 text: qsTr("About")
@@ -124,6 +123,24 @@ Page {
             cellHeight: cellWidth
             clip: true
 
+            property var _unfocusedOpacity: 1.0
+            property alias contextMenu: contextMenuItem
+            property Item expandItem
+            property real expandHeight: contextMenu.height
+            property int minOffsetIndex: expandItem != null
+                                         ? expandItem.modelIndex + (4-Math.floor(scale.scale)) - (expandItem.modelIndex % (4-Math.floor(scale.scale)))
+                                         : 0
+
+            ContextMenu {
+                id: contextMenuItem
+                x: parent !== null ? -parent.x : 0.0
+
+                MenuItem {
+                    text: qsTr("Delete")
+                    onClicked: gridView.expandItem.remove()
+                }
+            }
+
             Behavior on cellWidth {
                 PropertyAnimation {
                     id: resizeAnimation
@@ -138,21 +155,102 @@ Page {
                 enabled: videosModel.count === 0
             }
 
-            delegate: ThumbnailVideo {
+            delegate: ThumbnailImage {
                 id: thumbnail
-                title: model.title
                 source: resizeAnimation.running ? "" : model.url
                 size: gridView.cellWidth
-                duration: model.duration > 3600 ? formatter.formatDuration(model.duration, Formatter.DurationLong) : formatter.formatDuration(model.duration, Formatter.DurationShort)
-                onClicked: pageStack.push(videoPlayerPage, {url: videosModel.get(index).url, isLocal: true})
+                height: isItemExpanded ? grid.contextMenu.height + grid.cellWidth : grid.cellWidth
+                contentYOffset: index >= grid.minOffsetIndex ? grid.expandHeight : 0.0
+                anchors.bottomMargin: isItemExpanded ? grid.contextMenu.height : 0
+                z: isItemExpanded ? 1000 : 1
 
+                property bool isItemExpanded: grid.expandItem === thumbnail
+                property int modelIndex: index
+
+                onClicked: pageStack.push(videoPlayerPage, {url: videosModel.get(index).url, isLocal: true})
+                onPressAndHold: {
+                    grid.expandItem = thumbnail
+                    gridView.contextMenu.open(thumbnail)
+                }
+
+                function remove() {
+                    var remorse = removalComponent.createObject(null)
+                    remorse.z = thumbnail.z + 1
+
+                    remorse.execute(remorseContainerComponent.createObject(thumbnail),
+                                    remorse.text,
+                                    function() {
+                                        fileHelper.deleteFile(videosModel.get(index).url)
+                                    })
+                }
 
                 Rectangle {
-                    anchors.fill: parent
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottomMargin: isItemExpanded ? grid.contextMenu.height : 0
 
                     color: parent.down ? Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity) : "transparent"
                 }
+
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: isItemExpanded ? grid.contextMenu.height : 0
+                    width: parent.width
+                    height: parent.height / 2
+                    opacity: Theme.opacityOverlay
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: "transparent" }
+                        GradientStop { position: 1.0; color: Theme.highlightDimmerColor }
+                    }
+                }
+
+                Label {
+                    id: durationLabel
+                    text: model.duration > 3600 ? formatter.formatDuration(model.duration, Formatter.DurationLong) : formatter.formatDuration(model.duration, Formatter.DurationShort)
+
+                    font {
+                        pixelSize: Theme.fontSizeSmall
+                    }
+                    anchors.bottom: titleLabel.top
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.paddingMedium
+                }
+
+                Label {
+                    id: titleLabel
+                    text: model.title
+
+                    font {
+                        pixelSize: Theme.fontSizeExtraSmall
+                    }
+                    color: Theme.highlightColor
+                    truncationMode: TruncationMode.Elide
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: isItemExpanded ? grid.contextMenu.height + Theme.paddingMedium : Theme.paddingMedium
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.paddingMedium
+                    anchors.right: parent.right
+                }
             }
+        }
+    }
+
+    Component {
+        id: remorseContainerComponent
+        Item {
+            y: parent.contentYOffset
+            width: parent.width
+            height: parent.height
+        }
+    }
+
+    Component {
+        id: removalComponent
+        RemorseItem {
+            objectName: "remorseItem"
+            font.pixelSize: Theme.fontSizeSmallBase
         }
     }
 

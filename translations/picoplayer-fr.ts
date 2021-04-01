@@ -77,6 +77,10 @@
         <source>Stream URL</source>
         <translation>URL flux réseau</translation>
     </message>
+    <message>
+        <source>Delete</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>VideoPlayer</name>

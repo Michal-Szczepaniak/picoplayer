@@ -29,7 +29,6 @@ Page {
         id: displaySettings
         onBrightnessChanged: {
             if (inactiveBrightness === -1) {
-                console.log(brightness, typeof brightness)
                 inactiveBrightness = brightness
                 activeBrightness = brightness
                 autoBrightness = displaySettings.autoBrightnessEnabled

@@ -20,9 +20,11 @@ PKGCONFIG += \
 QT += dbus
 
 HEADERS += \
+    src/filehelper.h \
     src/volume/pulseaudiocontrol.h
 
 SOURCES += \
+    src/filehelper.cpp \
     src/picoplayer.cpp \
     src/volume/pulseaudiocontrol.cpp
 
