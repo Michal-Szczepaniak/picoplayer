@@ -157,19 +157,21 @@ Page {
 
             delegate: ThumbnailImage {
                 id: thumbnail
-                source: resizeAnimation.running ? "" : model.url
                 size: gridView.cellWidth
-                height: isItemExpanded ? grid.contextMenu.height + grid.cellWidth : grid.cellWidth
-                contentYOffset: index >= grid.minOffsetIndex ? grid.expandHeight : 0.0
-                anchors.bottomMargin: isItemExpanded ? grid.contextMenu.height : 0
+                width: gridView.cellWidth
+                height: isItemExpanded ? gridView.contextMenu.height + gridView.cellWidth : gridView.cellWidth
+
+                source: resizeAnimation.running ? "" : model.url
+
+                anchors.bottomMargin: isItemExpanded ? gridView.contextMenu.height : 0
                 z: isItemExpanded ? 1000 : 1
 
-                property bool isItemExpanded: grid.expandItem === thumbnail
+                property bool isItemExpanded: gridView.expandItem === thumbnail
                 property int modelIndex: index
 
                 onClicked: pageStack.push(videoPlayerPage, {url: videosModel.get(index).url, isLocal: true})
                 onPressAndHold: {
-                    grid.expandItem = thumbnail
+                    gridView.expandItem = thumbnail
                     gridView.contextMenu.open(thumbnail)
                 }
 
@@ -189,14 +191,12 @@ Page {
                     anchors.bottom: parent.bottom
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.bottomMargin: isItemExpanded ? grid.contextMenu.height : 0
 
                     color: parent.down ? Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity) : "transparent"
                 }
 
                 Rectangle {
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: isItemExpanded ? grid.contextMenu.height : 0
                     width: parent.width
                     height: parent.height / 2
                     opacity: Theme.opacityOverlay
@@ -228,7 +228,6 @@ Page {
                     color: Theme.highlightColor
                     truncationMode: TruncationMode.Elide
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: isItemExpanded ? grid.contextMenu.height + Theme.paddingMedium : Theme.paddingMedium
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.paddingMedium
                     anchors.right: parent.right
@@ -240,7 +239,6 @@ Page {
     Component {
         id: remorseContainerComponent
         Item {
-            y: parent.contentYOffset
             width: parent.width
             height: parent.height
         }

@@ -5,7 +5,7 @@ Name:       picoplayer
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Pico Player is minimal video player
-Version:    1.4.1
+Version:    1.4.2
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -17,6 +17,8 @@ BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(Qt5Quick)
+BuildRequires:  pkgconfig(dbus-1)
+BuildRequires:  pkgconfig(dbus-glib-1)
 BuildRequires:  desktop-file-utils
 
 %description
