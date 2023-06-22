@@ -5,7 +5,7 @@ Name:       picoplayer
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Pico Player is minimal video player
-Version:    1.4.2
+Version:    1.5
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -16,10 +16,22 @@ Requires:   sailfishsilica-qt5 >= 0.10.9
 BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
+BuildRequires:  pkgconfig(Qt5Gui)
 BuildRequires:  pkgconfig(Qt5Quick)
+BuildRequires:  pkgconfig(Qt5OpenGL)
+BuildRequires:  pkgconfig(Qt5OpenGLExtensions)
+BuildRequires:  pkgconfig(audioresource-qt)
 BuildRequires:  pkgconfig(dbus-1)
 BuildRequires:  pkgconfig(dbus-glib-1)
+BuildRequires:  pkgconfig(gstreamer-webrtc-1.0)
+BuildRequires:  pkgconfig(gstreamer-sdp-1.0)
+BuildRequires:  pkgconfig(gstreamer-1.0)
+BuildRequires:  pkgconfig(glib-2.0)
+BuildRequires:  pkgconfig(nemo-gstreamer-interfaces-1.0)
+BuildRequires:  dbus-glib-devel
+BuildRequires:  nemo-qml-plugin-notifications-qt5-devel
 BuildRequires:  desktop-file-utils
+BuildRequires:  ninja
 
 %description
 Short description of my Sailfish OS Application
@@ -29,12 +41,12 @@ Short description of my Sailfish OS Application
 %setup -q -n %{name}-%{version}
 
 %build
-%qtc_qmake5 
-%qtc_make %{?_smp_mflags}
+%cmake .
+make %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
-%qmake5_install
+%make_install
 
 desktop-file-install --delete-original       \
   --dir %{buildroot}%{_datadir}/applications             \

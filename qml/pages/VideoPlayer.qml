@@ -1,12 +1,18 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import QtMultimedia 5.6
+import com.verdanditeam.yt 1.0
 import Sailfish.Media 1.0
 import org.nemomobile.mpris 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
+import org.nemomobile.configuration 1.0
+import Nemo.Notifications 1.0
 import Nemo.KeepAlive 1.2
+import QtGraphicalEffects 1.0
 import QtSensors 5.0
+import Sailfish.Pickers 1.0
+import Sailfish.Share 1.0
 
 Page {
     id: page
@@ -17,12 +23,15 @@ Page {
     property string url
     property bool isLocal
     property bool _controlsVisible: true
-    property int autoBrightness: -1
+    property bool videoChanging: false
+    property bool landscape: ( page.orientation === Orientation.Landscape || page.orientation === Orientation.LandscapeInverted )
+    property bool landscapeCover: (_orientation === OrientationReading.LeftUp || _orientation === OrientationReading.RightUp) && app.videoCover && Qt.application.state === Qt.ApplicationInactive
     property int inactiveBrightness: -1
     property int activeBrightness: -1
-    property bool landscape: true
-    property bool landscapeCover: (_orientation === OrientationReading.LeftUp || _orientation === OrientationReading.RightUp) && app.videoCover && Qt.application.state === Qt.ApplicationInactive
     property bool fillMode: false
+    property bool playlistMode: false
+    Keys.onRightPressed: videoPlayer.seek(videoPlayer.position + 5000)
+    Keys.onLeftPressed: videoPlayer.seek(videoPlayer.position - 5000)
     property int _orientation: OrientationReading.TopUp
 
     DisplaySettings {
@@ -31,7 +40,6 @@ Page {
             if (inactiveBrightness === -1) {
                 inactiveBrightness = brightness
                 activeBrightness = brightness
-                autoBrightness = displaySettings.autoBrightnessEnabled
             }
         }
     }
@@ -77,10 +85,41 @@ Page {
         }
     }
 
-    Component.onDestruction: {
-        app.videoCover = false
-        displaySettings.autoBrightnessEnabled = autoBrightness
-        displaySettings.brightness = inactiveBrightness
+    function showHideControls() {
+//        jupii.ping()
+
+        if (_controlsVisible) {
+            showAnimation.start()
+            hideControlsAutomatically.restart()
+            dimPane.show()
+        } else {
+            hideAnimation.start()
+            dimPane.hide()
+        }
+
+        if ((_controlsVisible && page.landscape) || page.orientation === Orientation.Portrait) {
+            showAnimation3.start()
+        } else {
+            hideAnimation3.start()
+        }
+    }
+
+    onOrientationChanged: {
+        page.landscape = ( page.orientation === Orientation.Landscape || page.orientation === Orientation.LandscapeInverted )
+
+        if ( Qt.application.state === Qt.ApplicationActive && page.status === PageStatus.Active ) {
+            if (landscape) {
+                hideAnimation3.start()
+                displaySettings.brightness = activeBrightness
+            } else {
+                showAnimation3.start()
+                displaySettings.brightness = inactiveBrightness
+            }
+        }
+    }
+
+    on_ControlsVisibleChanged: {
+        showHideControls()
     }
 
     onStatusChanged: {
@@ -88,40 +127,17 @@ Page {
             app.videoCover = true
             Theme.setColorScheme("dark")
             showHideControls()
+            pacontrol.update()
             hideControlsAutomatically.restart()
-            displaySettings.autoBrightnessEnabled = false
         } else if (status === PageStatus.Inactive) {
             app.videoCover = false
-            displaySettings.autoBrightnessEnabled = autoBrightness
             displaySettings.brightness = inactiveBrightness
-            mediaPlayer.stop()
         }
     }
 
-    function showHideControls() {
-        if (_controlsVisible) {
-            showAnimation.start()
-            hideControlsAutomatically.restart()
-        } else {
-            hideAnimation.start()
-        }
-
-        if ((_controlsVisible && page.orientation === Orientation.Landscape) || page.orientation === Orientation.Portrait)
-            showAnimation3.start()
-        else
-            hideAnimation3.start()
-    }
-
-    onOrientationChanged: {
-
-        if ((_controlsVisible && page.orientation === Orientation.Landscape) || page.orientation === Orientation.Portrait)
-            showAnimation3.start()
-        else
-            hideAnimation3.start()
-    }
-
-    on_ControlsVisibleChanged: {
-        showHideControls()
+    Component.onDestruction: {
+        app.videoCover = false
+        displaySettings.brightness = inactiveBrightness
     }
 
     Connections {
@@ -134,20 +150,16 @@ Page {
     Connections {
         target: Qt.application
         onStateChanged: {
-            if ( page.status === PageStatus.Active ) {
-                if ( state === Qt.ApplicationInactive ) {
-                    displaySettings.autoBrightnessEnabled = autoBrightness
-                    activeBrightness = brightnessSlider.value * mousearea.brightnessStep
-                    displaySettings.brightness = inactiveBrightness
-                } else if ( state === Qt.ApplicationActive ) {
-                    displaySettings.autoBrightnessEnabled = false
-                    displaySettings.brightness = activeBrightness
-                }
+            if ( state === Qt.ApplicationInactive ) {
+                displaySettings.brightness = inactiveBrightness
+            } else if ( state === Qt.ApplicationActive && landscape ) {
+                displaySettings.brightness = activeBrightness
             }
         }
     }
 
     SilicaFlickable {
+        id: flickable
         anchors.fill: parent
 
         Rectangle {
@@ -157,65 +169,14 @@ Page {
             height: landscapeCover ? page.width*1.6 : page.height
             color: "black"
 
-            MediaPlayer {
-                id: mediaPlayer
-                source: url.trim()
-                autoLoad: true
-                autoPlay: true
-
-                function videoPlay() {
-                    videoPlaying = true
-                    if (mediaPlayer.bufferProgress == 1) {
-                        mediaPlayer.play()
-                    } else if (isLocal) {
-                        mediaPlayer.play()
-                    }
-                }
-
-                function videoPause() {
-                    videoPlaying = false
-                    mediaPlayer.pause()
-                }
-
-                property bool videoPlaying: false
-                property string errorMsg: ""
-
-                onPlaybackStateChanged: {
-                    mprisPlayer.playbackState = mediaPlayer.playbackState === MediaPlayer.PlayingState ?
-                                Mpris.Playing : mediaPlayer.playbackState === MediaPlayer.PausedState ?
-                                    Mpris.Paused : Mpris.Stopped
-                }
-
-                onError: {
-                    if ( error === MediaPlayer.ResourceError ) errorMsg = qsTr("Error: Problem with allocating resources")
-                    else if ( error === MediaPlayer.ServiceMissing ) errorMsg = qsTr("Error: Media service error")
-                    else if ( error === MediaPlayer.FormatError ) errorMsg = qsTr("Error: Video or Audio format is not supported")
-                    else if ( error === MediaPlayer.AccessDenied ) errorMsg = qsTr("Error: Access denied to the video")
-                    else if ( error === MediaPlayer.NetworkError ) errorMsg = qsTr("Error: Network error")
-                    stop()
-                }
-
-                onBufferProgressChanged: {
-                    if (!isLocal && videoPlaying && mediaPlayer.bufferProgress == 1) {
-                        mediaPlayer.play();
-                    }
-
-                    if (!isLocal && mediaPlayer.bufferProgress == 0) {
-                        mediaPlayer.pause();
-                    }
-                }
-
-                onPositionChanged: progressSlider.value = mediaPlayer.position
-            }
-
-            VideoOutput {
-                id: videoOutput
-                width : landscapeCover ? page.width*1.6 : page.width
-                source: mediaPlayer
+            VideoPlayer {
+                id: videoPlayer
+                width : landscapeCover ? page.width*1.6 : (landscape ? page.width : (page.fillMode ? page.height : page.width))
+                videoSource: url
                 anchors.centerIn: parent
                 height: landscapeCover
                           ? page.width
-                          : (landscape ? (page.fillMode ? page.width : page.height) : page.width/1.777777777777778)
+                          : (page.fillMode ? page.width : page.height)
                 transform: Rotation {
                     origin.x: (page.width*1.6)/2
                     origin.y: page.width/2
@@ -224,102 +185,143 @@ Page {
                            : 0
                 }
 
+                Behavior on width { PropertyAnimation { duration: pinchArea.pinching ? 250 : 0 } }
+                Behavior on height { PropertyAnimation { duration: pinchArea.pinching ? 250 : 0 } }
+
+                onStateChanged: {
+                    if (state === VideoPlayer.StatePaused) {
+                    } else if (state === VideoPlayer.StateStopped) {
+                    } else if (state === VideoPlayer.StatePlaying) {
+                        videoPlayer.setPlaybackSpeed(playbackSpeedSlider.value)
+                        showHideControls()
+                    }
+
+                    mprisPlayer.playbackState = state === VideoPlayer.StatePlaying ?
+                                Mpris.Playing : state === VideoPlayer.StatePaused ?
+                                    Mpris.Paused : Mpris.Stopped
+                }
+
+                onPositionChanged: {
+                    progressSlider.value = position
+                }
+
                 Rectangle {
-                    id: errorPane
-                    z: 99
+                    id: dimPane
                     anchors.fill: parent
-                    color: Theme.rgba("black", 0.8)
-                    visible: mediaPlayer.errorMsg !== ""
+                    property double colorOpacity: 0
+                    color: Theme.rgba("black", colorOpacity)
+                    Behavior on colorOpacity {
+                        NumberAnimation {}
+                    }
+                    visible: true
+
+                    function show() {
+                        colorOpacity = 0.5
+                    }
+
+                    function hide() {
+                        colorOpacity = 0
+                    }
+
                     Label {
                         id: errorText
-                        text: mediaPlayer.errorMsg
                         visible: parent.visible
                         anchors.centerIn: parent
-                        font.pixelSize: Theme.fontSizeExtraLarge
+                        font.pointSize: Theme.fontSizeExtraLarge
                         font.family: Theme.fontFamilyHeading
                     }
                 }
 
+
                 BusyIndicator {
                     size: BusyIndicatorSize.Large
                     anchors.centerIn: parent
-                    running: !isLocal && mediaPlayer.bufferProgress != 1
+                    running: !isLocal && videoPlayer.bufferProgress != 1
                 }
 
-                MouseArea {
-                    id: mousearea
-                    anchors.fill: videoOutput
-                    property int offset: page.height/20
-                    property int offsetHeight: height - (offset*2)
-                    property int step: offsetHeight / 10
-                    property bool stepChanged: false
-                    property int brightnessStep: displaySettings.maximumBrightness / 10
-                    property int lambdaVolumeStep: -1
-                    property int lambdaBrightnessStep: -1
-                    property int currentVolume: -1
-
-                    Timer{
-                        id: doubleClickTimer
-                        interval: 200
+                PinchArea {
+                    id: pinchArea
+                    anchors.fill: parent
+                    enabled: true
+                    property bool pinching: false
+                    onPinchUpdated: {
+                        if (pinch.scale < 0.9) {
+                            page.fillMode = false
+                        } else if (pinch.scale > 1.5) {
+                            page.fillMode = true
+                        }
                     }
+                    onPinchStarted: pinching = true
+                    onPinchFinished: pinching = false
+                    MouseArea {
+                        id: mousearea
+                        anchors.fill: parent
+                        property int offset: page.height/20
+                        property int offsetHeight: height - (offset*2)
+                        property int step: offsetHeight / 10
+                        property bool stepChanged: false
+                        property int brightnessStep: displaySettings.maximumBrightness / 10
+                        property int lambdaVolumeStep: -1
+                        property int lambdaBrightnessStep: -1
+                        property int currentVolume: -1
 
-                    function calculateStep(mouse) {
-                        return Math.round((offsetHeight - (mouse.y-offset)) / step)
-                    }
+                        Timer{
+                            id: doubleClickTimer
+                            interval: 200
+                        }
 
-                    onReleased: {
-                        if (doubleClickTimer.running) doubleClicked(mouse)
-                        if (!doubleClickTimer.running) doubleClickTimer.start()
-                        if (!stepChanged) _controlsVisible = !_controlsVisible
 
-                        if ( landscape ) {
+                        function calculateStep(mouse) {
+                            return Math.round((offsetHeight - (mouse.y-offset)) / step)
+                        }
+
+                        onReleased: {
+                            if (doubleClickTimer.running) doubleClicked(mouse)
+                            if (!doubleClickTimer.running) doubleClickTimer.start()
+                            if (!stepChanged) _controlsVisible = !_controlsVisible
+
+                            flickable.flickableDirection = Flickable.VerticalFlick
                             lambdaVolumeStep = -1
                             lambdaBrightnessStep = -1
                             stepChanged = false
                         }
-                    }
 
-                    onPressed: {
-                        if ( landscape ) {
+                        onPressed: {
                             pacontrol.update()
+                            flickable.flickableDirection = Flickable.HorizontalFlick
                             lambdaBrightnessStep = lambdaVolumeStep = calculateStep(mouse)
                         }
-                    }
 
-                    function doubleClicked(mouse) {
-                        if ( landscape ) {
+                        function doubleClicked(mouse) {
                             var newPos = null
                             if(mouse.x < mousearea.width/2 ) {
-                                newPos = mediaPlayer.position - 5000
+                                newPos = videoPlayer.position - 5000
                                 if(newPos < 0) newPos = 0
-                                mediaPlayer.seek(newPos)
+                                videoPlayer.seek(newPos)
                                 backwardIndicator.visible = true
                             } else if (mouse.x > mousearea.width/2) {
-                                newPos = mediaPlayer.position + 5000
-                                if(newPos > mediaPlayer.duration) {
-                                    mediaPlayer.nextVideo()
+                                newPos = videoPlayer.position + 5000
+                                if(newPos > videoPlayer.duration) {
                                     return
                                 }
-                                mediaPlayer.seek(newPos)
+                                videoPlayer.seek(newPos)
                                 forwardIndicator.visible = true
                             }
                         }
-                    }
 
-                    Connections {
-                        target: pacontrol
-                        onVolumeChanged: {
-                            mousearea.currentVolume = volume
-                            if (volume > 10) {
-                                mousearea.currentVolume = 10
-                            } else if (volume < 0) {
-                                mousearea.currentVolume = 0
+                        Connections {
+                            target: pacontrol
+                            onVolumeChanged: {
+                                mousearea.currentVolume = volume
+                                if (volume > 10) {
+                                    mousearea.currentVolume = 10
+                                } else if (volume < 0) {
+                                    mousearea.currentVolume = 0
+                                }
                             }
                         }
-                    }
 
-                    onPositionChanged: {
-                        if ( landscape ) {
+                        onPositionChanged: {
                             var step = calculateStep(mouse)
                             if((mouse.y - offset) > 0 && (mouse.y + offset) < offsetHeight && mouse.x < mousearea.width/2 && lambdaVolumeStep !== step) {
                                 pacontrol.setVolume(currentVolume - (lambdaVolumeStep - step))
@@ -346,168 +348,322 @@ Page {
                         }
                     }
                 }
-
-                Row {
-                    id: volumeIndicator
-                    anchors.centerIn: parent
-                    visible: false
-                    spacing: Theme.paddingLarge
-
-                    Image {
-                        width: Theme.itemSizeLarge
-                        height: Theme.itemSizeLarge
-                        source: "image://theme/icon-m-speaker-on"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Label {
-                        text: (mousearea.currentVolume * 10) + "%"
-                        font.pixelSize: Theme.fontSizeHuge
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                Row {
-                    id: brightnessIndicator
-                    anchors.centerIn: parent
-                    visible: false
-                    spacing: Theme.paddingLarge
-
-                    Image {
-                        width: Theme.itemSizeLarge
-                        height: Theme.itemSizeLarge
-                        source: "image://theme/icon-m-light-contrast"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Label {
-                        text: (Math.round(displaySettings.brightness/mousearea.brightnessStep) * 10) + "%"
-                        font.pixelSize: Theme.fontSizeHuge
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                Row {
-                    id: backwardIndicator
-                    anchors.centerIn: parent
-                    visible: false
-                    spacing: -Theme.paddingLarge*2
-
-                    Image {
-                        id: prev1
-                        width: Theme.itemSizeLarge
-                        height: Theme.itemSizeLarge
-                        anchors.verticalCenter: parent.verticalCenter
-                        fillMode: Image.PreserveAspectFit
-                        source: "image://theme/icon-cover-play"
-
-                        transform: Rotation{
-                            angle: 180
-                            origin.x: prev1.width/2
-                            origin.y: prev1.height/2
-                        }
-                    }
-                    Image {
-                        id: prev2
-                        width: Theme.itemSizeLarge
-                        height: Theme.itemSizeLarge
-                        anchors.verticalCenter: parent.verticalCenter
-                        fillMode: Image.PreserveAspectFit
-                        source: "image://theme/icon-cover-play"
-
-                        transform: Rotation{
-                            angle: 180
-                            origin.x: prev2.width/2
-                            origin.y: prev2.height/2
-                        }
-                    }
-
-                    Timer {
-                        id: hideBackward
-                        interval: 300
-                        onTriggered: backwardIndicator.visible = false
-                    }
-
-                    onVisibleChanged: if (backwardIndicator.visible) hideBackward.start()
-                }
-
-                Row {
-                    id: forwardIndicator
-                    anchors.centerIn: parent
-                    visible: false
-                    spacing: -Theme.paddingLarge*2
-
-                    Image {
-                        width: Theme.itemSizeLarge
-                        height: Theme.itemSizeLarge
-                        anchors.verticalCenter: parent.verticalCenter
-                        fillMode: Image.PreserveAspectFit
-                        source: "image://theme/icon-cover-play"
-
-                    }
-                    Image {
-                        width: Theme.itemSizeLarge
-                        height: Theme.itemSizeLarge
-                        anchors.verticalCenter: parent.verticalCenter
-                        fillMode: Image.PreserveAspectFit
-                        source: "image://theme/icon-cover-play"
-                    }
-
-                    Timer {
-                        id: hideForward
-                        interval: 300
-                        onTriggered: forwardIndicator.visible = false
-                    }
-
-                    onVisibleChanged: if (forwardIndicator.visible) hideForward.start()
-                }
-
-                NumberAnimation {
-                    id: showAnimation
-                    targets: [progress, duration, playButton, prevButton, nextButton, fillModeButton]
-                    properties: "opacity"
-                    to: 1
-                    duration: 100
-                }
-                NumberAnimation {
-                    id: hideAnimation
-                    targets: [progress, duration, playButton, prevButton, nextButton, fillModeButton]
-                    properties: "opacity"
-                    to: 0
-                    duration: 100
-                }
-
-                IconButton {
-                    id: playButton
-                    enabled: opacity != 0
-                    icon.source: mediaPlayer.playbackState == MediaPlayer.PlayingState ? "image://theme/icon-m-pause" : "image://theme/icon-m-play"
-                    anchors.centerIn: parent
-                    onClicked: mediaPlayer.playbackState == MediaPlayer.PlayingState ? mediaPlayer.videoPause() : mediaPlayer.videoPlay()
-                }
-
-                IconButton {
-                    id: nextButton
-                    enabled: opacity != 0
-                    icon.source: "image://theme/icon-m-next"
-                    anchors.top: playButton.top
-                    anchors.left: playButton.right
-                    anchors.leftMargin: page.width/4 - playButton.width/2
-                    onClicked: mediaPlayer.nextVideo()
-                }
-
-                IconButton {
-                    id: prevButton
-                    enabled: opacity != 0
-                    icon.source: "image://theme/icon-m-previous"
-                    anchors.top: playButton.top
-                    anchors.right: playButton.left
-                    anchors.rightMargin: page.width/4 - playButton.width/2
-                    onClicked: mediaPlayer.prevVideo()
-                }
             }
 
             DisplayBlanking {
-                preventBlanking: mediaPlayer.playbackState == MediaPlayer.PlayingState
+                preventBlanking: videoPlayer.state == VideoPlayer.StatePlaying
+            }
+
+            Row {
+                id: volumeIndicator
+                anchors.centerIn: parent
+                visible: false
+                spacing: Theme.paddingLarge
+
+                Image {
+                    width: Theme.itemSizeLarge
+                    height: Theme.itemSizeLarge
+                    source: "image://theme/icon-m-speaker-on"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Label {
+                    text: (mousearea.currentVolume * 10) + "%"
+                    font.pixelSize: Theme.fontSizeHuge
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+
+            Row {
+                id: brightnessIndicator
+                anchors.centerIn: parent
+                visible: false
+                spacing: Theme.paddingLarge
+
+                Image {
+                    width: Theme.itemSizeLarge
+                    height: Theme.itemSizeLarge
+                    source: "image://theme/icon-m-light-contrast"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Label {
+                    text: (Math.round(displaySettings.brightness/mousearea.brightnessStep) * 10) + "%"
+                    font.pixelSize: Theme.fontSizeHuge
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+
+            Row {
+                id: backwardIndicator
+                anchors.centerIn: parent
+                visible: false
+                spacing: -Theme.paddingLarge*2
+
+                Image {
+                    id: prev1
+                    width: Theme.itemSizeLarge
+                    height: Theme.itemSizeLarge
+                    anchors.verticalCenter: parent.verticalCenter
+                    fillMode: Image.PreserveAspectFit
+                    source: "image://theme/icon-cover-play"
+
+                    transform: Rotation{
+                        angle: 180
+                        origin.x: prev1.width/2
+                        origin.y: prev1.height/2
+                    }
+                }
+                Image {
+                    id: prev2
+                    width: Theme.itemSizeLarge
+                    height: Theme.itemSizeLarge
+                    anchors.verticalCenter: parent.verticalCenter
+                    fillMode: Image.PreserveAspectFit
+                    source: "image://theme/icon-cover-play"
+
+                    transform: Rotation{
+                        angle: 180
+                        origin.x: prev2.width/2
+                        origin.y: prev2.height/2
+                    }
+                }
+
+                Timer {
+                    id: hideBackward
+                    interval: 300
+                    onTriggered: backwardIndicator.visible = false
+                }
+
+                onVisibleChanged: if (backwardIndicator.visible) hideBackward.start()
+            }
+
+            Row {
+                id: forwardIndicator
+                anchors.centerIn: parent
+                visible: false
+                spacing: -Theme.paddingLarge*2
+
+                Image {
+                    width: Theme.itemSizeLarge
+                    height: Theme.itemSizeLarge
+                    anchors.verticalCenter: parent.verticalCenter
+                    fillMode: Image.PreserveAspectFit
+                    source: "image://theme/icon-cover-play"
+
+                }
+                Image {
+                    width: Theme.itemSizeLarge
+                    height: Theme.itemSizeLarge
+                    anchors.verticalCenter: parent.verticalCenter
+                    fillMode: Image.PreserveAspectFit
+                    source: "image://theme/icon-cover-play"
+                }
+
+                Timer {
+                    id: hideForward
+                    interval: 300
+                    onTriggered: forwardIndicator.visible = false
+                }
+
+                onVisibleChanged: if (forwardIndicator.visible) hideForward.start()
+            }
+
+            NumberAnimation {
+                id: showAnimation
+                targets: [progress, duration, playButton, streamsButton, playbackSpeedButton]
+                properties: "opacity"
+                to: 1
+                duration: 100
+            }
+            NumberAnimation {
+                id: hideAnimation
+                targets: [progress, duration, playButton, streamsButton, playbackSpeedButton, playbackSpeedSlider]
+                properties: "opacity"
+                to: 0
+                duration: 100
+            }
+
+            IconButton {
+                id: playButton
+                enabled: opacity != 0
+                icon.source: videoPlayer.state == VideoPlayer.StatePlaying ? "image://theme/icon-m-pause" : "image://theme/icon-m-play"
+                anchors.centerIn: parent
+                onClicked: videoPlayer.state == VideoPlayer.StatePlaying ? videoPlayer.pause() : videoPlayer.play()
+            }
+
+            IconButton {
+                id: streamsButton
+                visible: opacity != 0
+                icon.source: "qrc:///images/icon-m-source.svg"
+                width: Theme.itemSizeExtraSmall
+                height: width
+                anchors.right: playbackSpeedButton.left
+                anchors.top: parent.top
+                anchors.margins: Theme.paddingMedium
+                icon.width: width
+                icon.height: width
+                onClicked: pageStack.push(streamsDialog)
+            }
+
+            Component {
+                id: streamsDialog
+
+                Dialog {
+                    canAccept: false
+                    allowedOrientations: Orientation.All
+
+                    Component {
+                        id: filePickerPage
+                        FilePickerPage {
+                            allowedOrientations: Orientation.All
+
+                            onSelectedContentPropertiesChanged: {
+                                videoPlayer.subtitle = "file://" + selectedContentProperties.filePath
+                            }
+                        }
+                    }
+                    Column {
+                        anchors.fill: parent
+
+                        DialogHeader {
+                            id: header
+                        }
+
+                        ComboBox {
+                            width: parent.width
+                            label: qsTr("Video track")
+
+                            Component.onCompleted: {
+                                currentIndex = videoPlayer.selectedVideoStream + 1
+                                currentIndex = currentIndex
+                            }
+
+                            onCurrentIndexChanged: if (!_menuOpen) videoPlayer.selectVideoStream(currentIndex - 1)
+
+                            menu: ContextMenu {
+                                Repeater {
+                                    model: videoPlayer.videoStreams
+                                    MenuItem {
+                                        text: qsTr("%1. %2").arg(index).arg(modelData)
+                                    }
+                                }
+                            }
+                        }
+
+                        ComboBox {
+                            width: parent.width
+                            label: qsTr("Audio track")
+
+                            Component.onCompleted: {
+                                currentIndex = videoPlayer.selectedAudioStream + 1
+                                currentIndex = currentIndex
+                            }
+
+                            onCurrentIndexChanged: if (!_menuOpen) videoPlayer.selectAudioStream(currentIndex - 1)
+
+                            menu: ContextMenu {
+                                Repeater {
+                                    model: videoPlayer.audioStreams
+                                    MenuItem {
+                                        text: qsTr("%1. %2").arg(index).arg(modelData)
+                                    }
+                                }
+                            }
+                        }
+
+                        ComboBox {
+                            width: parent.width
+                            label: qsTr("Subtitle track")
+
+
+                            Component.onCompleted: {
+                                currentIndex = videoPlayer.selectedSubtitleStream + 1
+                                currentIndex = currentIndex
+                            }
+
+                            onCurrentIndexChanged: videoPlayer.selectSubtitle(currentIndex - 1)
+
+                            menu: ContextMenu {
+                                Repeater {
+                                    model: videoPlayer.subtitleStreams
+                                    MenuItem {
+                                        text: qsTr("%1. %2").arg(index).arg(modelData)
+                                    }
+                                }
+                            }
+                        }
+
+                        Button {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            height: implicitHeight + Theme.paddingLarge+2
+                            text: qsTr("Select subtitle file")
+                            onClicked: pageStack.push(filePickerPage)
+                        }
+                    }
+                }
+
+            }
+
+            IconButton {
+                id: playbackSpeedButton
+                visible: opacity != 0 && !playbackSpeedSlider.visible
+                icon.source: "qrc:///images/icon-m-playback-speed.svg"
+                width: Theme.itemSizeExtraSmall
+                height: width
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: Theme.paddingMedium
+                icon.width: width
+                icon.height: width
+                onClicked: {
+                    playbackSpeedSlider.opacity = 1.0
+                    playbackSpeedSliderTimer.start()
+                }
+
+                Timer {
+                    id: playbackSpeedSliderTimer
+                    interval: 3000
+                    repeat: false
+                    onTriggered: playbackSpeedSlider.opacity = 0
+                }
+            }
+
+            Slider {
+                id: playbackSpeedSlider
+                visible: opacity !== 0
+                opacity: 0
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.topMargin: width - height + Theme.paddingMedium*2
+                anchors.rightMargin: -(width) + height + Theme.paddingMedium
+                width: Theme.itemSizeHuge*2
+                value: 1.0
+                minimumValue: 0.25
+                maximumValue: 2.0
+                stepSize: 0.25
+                transform: Rotation { angle: -90 }
+                enabled: visible
+                onDownChanged: if (down) {
+                                   playbackSpeedSliderTimer.stop()
+                               } else {
+                                   playbackSpeedSliderTimer.start()
+                                   videoPlayer.setPlaybackSpeed(value)
+                               }
+
+                Behavior on opacity {
+                    PropertyAction {}
+                }
+            }
+
+            Label {
+                anchors.top: parent.top
+                anchors.topMargin: playbackSpeedSlider.width - playbackSpeedSlider.height - Theme.paddingMedium*2
+                anchors.left: playbackSpeedSlider.left
+                anchors.leftMargin: playbackSpeedSlider.height/2 - width/2
+                text: playbackSpeedSlider.value
+                opacity: playbackSpeedSlider.opacity
+                visible: opacity !== 0
             }
 
             Slider {
@@ -548,7 +704,7 @@ Page {
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
                 anchors.margins: Theme.paddingLarge
-                text:  Format.formatDuration(Math.round(mediaPlayer.position/1000), ((mediaPlayer.duration/1000) > 3600 ? Formatter.DurationLong : Formatter.DurationShort))
+                text:  Format.formatDuration(Math.round(videoPlayer.position/1000), ((videoPlayer.duration/1000) > 3600 ? Formatter.DurationLong : Formatter.DurationShort))
             }
 
             Label {
@@ -556,14 +712,14 @@ Page {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 anchors.margins: Theme.paddingLarge
-                text: Format.formatDuration(Math.round(mediaPlayer.duration/1000), ((mediaPlayer.duration/1000) > 3600 ? Formatter.DurationLong : Formatter.DurationShort))
+                text: Format.formatDuration(Math.round(videoPlayer.duration/1000), ((videoPlayer.duration/1000) > 3600 ? Formatter.DurationLong : Formatter.DurationShort))
             }
 
             Slider {
                 id: progressSlider
-                value: mediaPlayer.position
+                value: videoPlayer.position
                 minimumValue: 0
-                maximumValue: mediaPlayer.duration
+                maximumValue: videoPlayer.duration
                 anchors.bottom: parent.bottom
                 x: progress.width
                 width: parent.width - progress.width - duration.width
@@ -581,33 +737,34 @@ Page {
                     duration: 100
                 }
 
-                onReleased: mediaPlayer.seek(progressSlider.value)
+                onReleased: videoPlayer.seek(progressSlider.value)
             }
+        }
 
-            IconButton {
-                id: fillModeButton
-                visible: opacity != 0 && landscape
-                icon.source: page.fillMode ? "qrc:///images/icon-m-scale-to-16-9.svg" : "qrc:///images/icon-m-scale-to-21-9.svg"
-                width: Theme.itemSizeExtraSmall
-                height: width
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.margins: Theme.paddingMedium
-                icon.width: width
-                icon.height: width
-                onClicked: page.fillMode = !page.fillMode
-            }
+        Label {
+            id: subtitles
+            text: videoPlayer.displaySubtitle
+            width: page.width - Theme.paddingLarge*2
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            font.weight: Font.Bold
+            color: "white"
+            style: Text.Outline
+            styleColor: "black"
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Theme.paddingMedium
+            anchors.horizontalCenter: videoPlayer.horizontalCenter
         }
     }
 
     CoverActionList {
         id: coverAction
-        enabled: mediaPlayer.playbackState !== MediaPlayer.StoppedState
+        enabled: videoPlayer.state !== VideoPlayer.StateStopped
 
         CoverAction {
-            iconSource: mediaPlayer.playbackState == MediaPlayer.PlayingState ? "image://theme/icon-cover-pause" : "image://theme/icon-cover-play"
+            iconSource: videoPlayer.state == VideoPlayer.StatePlaying ? "image://theme/icon-cover-pause" : "image://theme/icon-cover-play"
             onTriggered: {
-                mediaPlayer.playbackState == MediaPlayer.PlayingState ? mediaPlayer.videoPause() : mediaPlayer.videoPlay()
+                videoPlayer.state == VideoPlayer.StatePlaying ? videoPlayer.videoPause() : videoPlayer.play()
             }
         }
     }
@@ -616,21 +773,21 @@ Page {
         id: mprisPlayer
 
         serviceName: "picoplayer"
-        property string title: mediaPlayer.metaData.title ? mediaPlayer.metaData.title : "picoplayer"
+//        property string title: videoPlayer.metaData.title ? videoPlayer.metaData.title : "picoplayer"
         property var playbackState: Mpris.Playing
 
 
-        Component.onCompleted: {
-            title = mediaPlayer.metaData.title !== undefined ? mediaPlayer.metaData.title : "picoplayer"
-        }
+//        Component.onCompleted: {
+//            title = videoPlayer.metaData.title !== undefined ? videoPlayer.metaData.title : "picoplayer"
+//        }
 
-        onTitleChanged: {
-            var metadata = mprisPlayer.metadata
+//        onTitleChanged: {
+//            var metadata = mprisPlayer.metadata
 
-            metadata[Mpris.metadataToString(Mpris.Title)] = title // String
+//            metadata[Mpris.metadataToString(Mpris.Title)] = title // String
 
-            mprisPlayer.metadata = metadata
-        }
+//            mprisPlayer.metadata = metadata
+//        }
 
         identity: "picoplayer"
 
@@ -650,26 +807,26 @@ Page {
 
         onPauseRequested: {
             console.log("pause")
-            mediaPlayer.videoPause()
+            videoPlayer.videoPause()
         }
 
         onPlayRequested: {
             console.log("play")
-            mediaPlayer.videoPlay()
+            videoPlayer.play()
         }
 
         onPlayPauseRequested: {
             console.log("pauseplay")
-            mediaPlayer.playbackState == MediaPlayer.PlayingState ? mediaPlayer.videoPause() : mediaPlayer.videoPlay()
+            videoPlayer.state == VideoPlayer.StatePlaying ? videoPlayer.videoPause() : videoPlayer.play()
         }
 
         onStopRequested: {
             console.log("stop")
-            mediaPlayer.stop()
+            videoPlayer.stop()
         }
 
         onSeekRequested: {
-            mediaPlayer.seek(offset)
+            videoPlayer.seek(offset)
         }
     }
 }

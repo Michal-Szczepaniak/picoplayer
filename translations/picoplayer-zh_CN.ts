@@ -85,24 +85,32 @@
 <context>
     <name>VideoPlayer</name>
     <message>
-        <source>Error: Problem with allocating resources</source>
-        <translation>错误:分配资源错误</translation>
+        <source>Video track</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Error: Media service error</source>
-        <translation>错误:媒体服务错误</translation>
+        <source>Audio track</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Error: Video or Audio format is not supported</source>
-        <translation>错误:不受支持的视频或音频格式</translation>
+        <source>Subtitle track</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Error: Access denied to the video</source>
-        <translation>错误:访问视频被拒绝</translation>
+        <source>%1. %2</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Error: Network error</source>
-        <translation>错误:网络错误</translation>
+        <source>Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select subtitle file</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

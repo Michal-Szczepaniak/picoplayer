@@ -85,24 +85,32 @@
 <context>
     <name>VideoPlayer</name>
     <message>
-        <source>Error: Problem with allocating resources</source>
-        <translation>Erreur : problème d&apos;allocation des ressources</translation>
+        <source>Video track</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Error: Media service error</source>
-        <translation>Erreur : erreur du service multimédia</translation>
+        <source>Audio track</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Error: Video or Audio format is not supported</source>
-        <translation>Erreur : le format vidéo ou audio n&apos;est pas supporté</translation>
+        <source>Subtitle track</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Error: Access denied to the video</source>
-        <translation>Erreur : accès refusé à la vidéo</translation>
+        <source>%1. %2</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Error: Network error</source>
-        <translation>Erreur : erreur réseau</translation>
+        <source>Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select subtitle file</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

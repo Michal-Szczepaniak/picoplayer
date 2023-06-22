@@ -169,7 +169,7 @@ Page {
                 property bool isItemExpanded: gridView.expandItem === thumbnail
                 property int modelIndex: index
 
-                onClicked: pageStack.push(videoPlayerPage, {url: videosModel.get(index).url, isLocal: true})
+                onClicked: pageStack.push(Qt.resolvedUrl("VideoPlayer.qml"), {url: videosModel.get(index).url, isLocal: true})
                 onPressAndHold: {
                     gridView.expandItem = thumbnail
                     gridView.contextMenu.open(thumbnail)
@@ -284,9 +284,5 @@ Page {
                 }
             }
         }
-    }
-
-    VideoPlayer {
-        id: videoPlayerPage
     }
 }

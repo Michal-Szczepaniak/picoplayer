@@ -5,7 +5,7 @@
     <name></name>
     <message id="No videos">
         <source></source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -86,24 +86,32 @@
 <context>
     <name>VideoPlayer</name>
     <message>
-        <source>Error: Problem with allocating resources</source>
-        <translation>Error: problema con la asignación de recursos</translation>
+        <source>Video track</source>
+        <translation>Pista de vídeo</translation>
     </message>
     <message>
-        <source>Error: Media service error</source>
-        <translation>Error: Error del servicio de medios</translation>
+        <source>Audio track</source>
+        <translation>Pista de audio</translation>
     </message>
     <message>
-        <source>Error: Video or Audio format is not supported</source>
-        <translation>Error: el formato de video o audio no es compatible</translation>
+        <source>Subtitle track</source>
+        <translation>Pista de subtítulo</translation>
     </message>
     <message>
-        <source>Error: Access denied to the video</source>
-        <translation>Error: acceso no permitido al video</translation>
+        <source>%1. %2</source>
+        <translation>%1. %2</translation>
     </message>
     <message>
-        <source>Error: Network error</source>
-        <translation>Error: Error de red</translation>
+        <source>Unknown</source>
+        <translation>Desconocido</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Ninguno</translation>
+    </message>
+    <message>
+        <source>Select subtitle file</source>
+        <translation>Seleccionar archivo de subtítulo</translation>
     </message>
 </context>
 </TS>

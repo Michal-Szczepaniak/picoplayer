@@ -4,10 +4,7 @@ X-Nemo-Application-Type=silica-qt5
 Icon=picoplayer
 Exec=picoplayer %U
 Name=Pico Player
-# translation example:
-# your app name in German locale (de)
-#
-# Remember to comment out the following line, if you do not want to use
-# a different app name in German locale (de).
-Name[de]=picoplayer
 MimeType=video/mp4;video/dv;video/mpeg;video/x-mpeg;video/msvideo;video/quicktime;video/x-anim;video/x-avi;video/x-ms-asf;video/x-ms-wmv;video/x-msvideo;video/x-nsv;video/x-flc;video/x-fli;video/x-flv;video/vnd.rn-realvideo;video/mp4;video/mp4v-es;video/mp2t;video/x-matroska;video/webm;
+
+[X-Sailjail]
+Sandboxing=Disabled
