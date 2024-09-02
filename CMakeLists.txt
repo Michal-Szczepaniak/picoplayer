@@ -24,8 +24,6 @@ pkg_search_module(EGL egl REQUIRED)
 pkg_search_module(OPENGL_EXTENSIONS Qt5OpenGLExtensions REQUIRED)
 
 if (TARGET_SAILFISH)
-    find_package(Qt5 COMPONENTS SystemInfo REQUIRED)
-
     pkg_search_module(AUDIORESOURCE audioresource-qt REQUIRED)
     pkg_search_module(NEMO_GSTREAMER_INTERFACES nemo-gstreamer-interfaces-1.0 REQUIRED)
 endif()
@@ -97,14 +95,11 @@ install(TARGETS picoplayer
 install(DIRECTORY qml
     DESTINATION share/picoplayer
 )
-install(DIRECTORY js
-    DESTINATION share/picoplayer
-)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/translations
     DESTINATION share/picoplayer
     FILES_MATCHING PATTERN "*.qm"
 )
-install(FILES picoplayer.desktop picoplayer-url.desktop
+install(FILES picoplayer.desktop
     DESTINATION share/applications
 )
 install(FILES icons/86x86/picoplayer.png

@@ -28,7 +28,6 @@ Page {
         property real scale: 2
     }
 
-
     DocumentGalleryModel {
         id: videosModel
 
@@ -161,6 +160,7 @@ Page {
                 width: gridView.cellWidth
                 height: isItemExpanded ? gridView.contextMenu.height + gridView.cellWidth : gridView.cellWidth
 
+                onSourceChanged: console.log(model.filePath)
                 source: resizeAnimation.running ? "" : model.url
 
                 anchors.bottomMargin: isItemExpanded ? gridView.contextMenu.height : 0

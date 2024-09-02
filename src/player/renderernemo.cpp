@@ -57,17 +57,6 @@ static const QString VERTEX_SHADER = ""
         "}"
     "";
 
-static const QString VERTEX_3D_SHADER = ""
-        "uniform highp mat4 matrix;"
-        "attribute highp vec3 vertices;"
-        "attribute highp vec2 textureCoord;"
-        "varying highp vec2 coords;"
-        "void main() {"
-        "    gl_Position = matrix * vec4(vertices, 1.0);"
-        "    coords = textureCoord;"
-        "}"
-    "";
-
 QtCamViewfinderRendererNemo::QtCamViewfinderRendererNemo(QObject *parent) :
     QObject(parent),
     _sink(0),
