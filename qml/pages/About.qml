@@ -31,7 +31,7 @@ Page {
             }
 
             Label {
-                text: "Pico Player 1.5.2"
+                text: "Pico Player 1.5.3"
                 font.pixelSize: Theme.fontSizeExtraLarge
                 anchors.horizontalCenter: parent.horizontalCenter
             }

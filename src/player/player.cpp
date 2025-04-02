@@ -6,6 +6,7 @@
 #include <cmath>
 #include <QTextDocument>
 #include <QLocale>
+#include <QDateTime>
 
 VideoPlayer::VideoPlayer(QQuickItem *parent) :
     QQuickPaintedItem(parent),
@@ -19,6 +20,7 @@ VideoPlayer::VideoPlayer(QQuickItem *parent) :
     _scaletempo(nullptr),
     _playbin(nullptr),
     _state(VideoPlayer::StateStopped),
+    _previousState(VideoPlayer::StatePlaying),
     _timer(new QTimer((QObject*)this)),
     _pos(0),
     _playbackSpeed(1.0),
@@ -28,6 +30,12 @@ VideoPlayer::VideoPlayer(QQuickItem *parent) :
     _timer->setSingleShot(false);
     _timer->setInterval(100);
     connect(_timer, &QTimer::timeout, this, &VideoPlayer::positionChanged);
+
+    _bufferTimeoutTimer.setSingleShot(true);
+    _bufferTimeoutTimer.setInterval(1000);
+    connect(&_bufferTimeoutTimer, &QTimer::timeout, [&](){
+        if (_state == StateBuffering) setState(_previousState);
+    });
 
     setRenderTarget(QQuickPaintedItem::FramebufferObject);
     setSmooth(false);
@@ -279,8 +287,6 @@ bool VideoPlayer::seek(qint64 offset) {
 
     if (ret) {
         _pos = pos;
-
-        return TRUE;
     }
 
     return TRUE;
@@ -359,13 +365,13 @@ void VideoPlayer::paint(QPainter *painter) {
 
     bool needsNativePainting = _renderer->needsNativePainting();
 
-    if (needsNativePainting) {
-        painter->beginNativePainting();
-    }
-
     gint64 pos;
     if (gst_element_query_position(_pipeline, GST_FORMAT_TIME, &pos) && pos > _subtitleEnd) {
         setDisplaySubtitle("");
+    }
+
+    if (needsNativePainting) {
+        painter->beginNativePainting();
     }
 
     _renderer->paint(QMatrix4x4(painter->combinedTransform()), painter->viewport());
@@ -391,6 +397,9 @@ bool VideoPlayer::setState(const VideoPlayer::State& state) {
 
     if (state == VideoPlayer::StatePaused || state == VideoPlayer::StateBuffering) {
         _timer->stop();
+        if (state == VideoPlayer::StatePaused) {
+            _previousState = VideoPlayer::StatePaused;
+        }
 
         int ret = gst_element_set_state(_pipeline, GST_STATE_PAUSED);
         if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -417,6 +426,10 @@ bool VideoPlayer::setState(const VideoPlayer::State& state) {
 
         return true;
     } else if (state == VideoPlayer::StatePlaying) {
+        if (_state == VideoPlayer::StateBuffering) {
+            _previousState = VideoPlayer::StatePlaying;
+        }
+
         if (gst_element_set_state(_pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
                 qmlInfo(this) << "error setting pipeline to PLAYING";
                 return false;
@@ -700,6 +713,10 @@ void VideoPlayer::updateBufferingState(int percent, QString name)
     for (int p : _bufferingProgress) {
         if (p < 10) {
             setState(VideoPlayer::StateBuffering);
+
+            _bufferTimeoutTimer.start();
+
+            _bufferTimestamp = QDateTime::currentMSecsSinceEpoch();
             return;
         }
     }

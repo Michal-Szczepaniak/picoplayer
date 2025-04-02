@@ -72,7 +72,7 @@ private:
     QMatrix4x4 _projectionMatrix;
     std::vector<GLfloat> _vertexCoords;
     std::vector<GLfloat> _texCoords;
-    std::vector<CachedTexture> _textures;
+    QVector<CachedTexture> _textures;
     QSizeF _size;
     QSizeF _videoSize;
     QRectF _renderArea;
@@ -81,6 +81,7 @@ private:
     bool _buffersInvalidated;
     bool _bufferChanged;
     QOpenGLExtension_OES_EGL_image *_img;
+    QMetaObject::Connection _sceneGraphInitializedSignal;
 };
 
 #endif /* RENDERER_MEEGO_H */

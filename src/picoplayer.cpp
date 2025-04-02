@@ -6,6 +6,7 @@
 #include <execinfo.h>
 #include <unistd.h>
 #include <cxxabi.h>
+#include <quickviewhelper.h>
 
 void handler(int sig) {
     void *array[10];
@@ -27,12 +28,13 @@ int main(int argc, char *argv[])
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
     QSharedPointer<QQuickView> view(SailfishApp::createView());
 
+    QuickViewHelper::setView(view.data());
+
     PulseAudioControl pacontrol;
     view->rootContext()->setContextProperty("pacontrol", &pacontrol);
 
     FileHelper fileHelper;
     view->rootContext()->setContextProperty("fileHelper", &fileHelper);
-
 
     qmlRegisterType<VideoPlayer>("com.verdanditeam.yt", 1, 0, "VideoPlayer");
 

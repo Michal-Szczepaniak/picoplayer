@@ -26,6 +26,8 @@
 #include <gst/interfaces/nemoeglimagememory.h>
 #include <QOpenGLContext>
 #include <QOpenGLExtensions>
+#include <QQuickView>
+#include <quickviewhelper.h>
 
 typedef void *EGLSyncKHR;
 #define EGL_SYNC_FENCE_KHR                                             0x30F9
@@ -83,14 +85,26 @@ QtCamViewfinderRendererNemo::QtCamViewfinderRendererNemo(QObject *parent) :
     for (int x = 0; x < 8; x++) {
         _vertexCoords[x] = 0;
     }
+
+    _sceneGraphInitializedSignal = connect(QuickViewHelper::getView(), &QQuickView::sceneGraphInitialized, [&](){ createProgram(); });
 }
 
 QtCamViewfinderRendererNemo::~QtCamViewfinderRendererNemo() {
+    disconnect(_sceneGraphInitializedSignal);
+
     cleanup();
+
+    if (_queuedBuffer) {
+        gst_buffer_unref(_queuedBuffer);
+    }
+
+    if (_currentBuffer) {
+        gst_buffer_unref(_currentBuffer);
+    }
 
     if (_program) {
         delete _program;
-        _program = 0;
+        _program = nullptr;
     }
 
     if (_img) {
@@ -162,6 +176,7 @@ void QtCamViewfinderRendererNemo::paint(const QMatrix4x4& matrix, const QRectF& 
 
     if (!_program) {
         createProgram();
+        return;
     }
 
     paintFrame(matrix);
@@ -290,11 +305,6 @@ void QtCamViewfinderRendererNemo::createProgram() {
     _program->bindAttributeLocation("inputVertex", 0);
     _program->bindAttributeLocation("textureCoord", 1);
 
-    if (!_program->link()) {
-        qCritical() << "Failed to link program!";
-        return;
-    }
-
     if (!_program->bind()) {
         qCritical() << "Failed to bind program";
         return;
@@ -326,7 +336,7 @@ void QtCamViewfinderRendererNemo::paintFrame(const QMatrix4x4& matrix) {
 
     std::vector<GLfloat> texCoords(_texCoords);
 
-    GLuint texture;
+    GLuint texture = 0;
 
     GstMemory *memory = gst_buffer_peek_memory(_currentBuffer, 0);
 
@@ -353,7 +363,6 @@ void QtCamViewfinderRendererNemo::paintFrame(const QMatrix4x4& matrix) {
         }
     }
 
-    _program->link();
     _program->bind();
 
     _program->setUniformValue("matrix", _projectionMatrix);

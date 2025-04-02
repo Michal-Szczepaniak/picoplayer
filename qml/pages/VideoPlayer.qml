@@ -510,7 +510,7 @@ Page {
                 id: streamsDialog
 
                 Dialog {
-                    canAccept: false
+                    forwardNavigation: false
                     allowedOrientations: Orientation.All
 
                     Component {
