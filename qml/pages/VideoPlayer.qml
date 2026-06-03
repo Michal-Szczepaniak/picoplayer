@@ -13,6 +13,7 @@ import QtGraphicalEffects 1.0
 import QtSensors 5.0
 import Sailfish.Pickers 1.0
 import Sailfish.Share 1.0
+import org.freedesktop.gstreamer.GLVideoItem 1.0
 
 Page {
     id: page
@@ -188,6 +189,14 @@ Page {
                 Behavior on width { PropertyAnimation { duration: pinchArea.pinching ? 250 : 0 } }
                 Behavior on height { PropertyAnimation { duration: pinchArea.pinching ? 250 : 0 } }
 
+                GstGLVideoItem {
+                    id: videoItem
+
+                    anchors.fill: parent
+
+                    Component.onCompleted: videoPlayer.setOutput(videoItem)
+                }
+
                 onStateChanged: {
                     if (state === VideoPlayer.StatePaused) {
                     } else if (state === VideoPlayer.StateStopped) {
@@ -236,7 +245,7 @@ Page {
                 BusyIndicator {
                     size: BusyIndicatorSize.Large
                     anchors.centerIn: parent
-                    running: !isLocal && videoPlayer.bufferProgress < 0.05
+                    running: false && !isLocal && videoPlayer.bufferProgress < 0.05
                 }
 
                 PinchArea {
@@ -769,7 +778,7 @@ Page {
         CoverAction {
             iconSource: videoPlayer.state == VideoPlayer.StatePlaying ? "image://theme/icon-cover-pause" : "image://theme/icon-cover-play"
             onTriggered: {
-                videoPlayer.state == VideoPlayer.StatePlaying ? videoPlayer.videoPause() : videoPlayer.play()
+                videoPlayer.state == VideoPlayer.StatePlaying ? videoPlayer.pause() : videoPlayer.play()
             }
         }
     }
@@ -779,7 +788,7 @@ Page {
 
         serviceName: "picoplayer"
 //        property string title: videoPlayer.metaData.title ? videoPlayer.metaData.title : "picoplayer"
-        property var playbackState: Mpris.Playing
+        property var playbackState: Mpris.Stopped
 
 
 //        Component.onCompleted: {
@@ -812,7 +821,7 @@ Page {
 
         onPauseRequested: {
             console.log("pause")
-            videoPlayer.videoPause()
+            videoPlayer.pause()
         }
 
         onPlayRequested: {
@@ -822,7 +831,7 @@ Page {
 
         onPlayPauseRequested: {
             console.log("pauseplay")
-            videoPlayer.state == VideoPlayer.StatePlaying ? videoPlayer.videoPause() : videoPlayer.play()
+            videoPlayer.state == VideoPlayer.StatePlaying ? videoPlayer.pause() : videoPlayer.play()
         }
 
         onStopRequested: {

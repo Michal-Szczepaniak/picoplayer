@@ -59,6 +59,7 @@ public:
     Q_INVOKABLE void selectVideoStream(int index);
     Q_INVOKABLE void selectAudioStream(int index);
     Q_INVOKABLE void selectSubtitle(int index);
+    Q_INVOKABLE void setOutput(QQuickItem *videoItem);
 
     typedef enum {
         StateStopped,
@@ -111,6 +112,8 @@ private:
     GstElement *_pulsesink;
     GstElement *_scaletempo;
     GstElement *_playbin;
+    GstElement *_sinkBin;
+    GstElement *_qmlGlSink;
     GstElement *_appSink;
     State _state;
     State _previousState;

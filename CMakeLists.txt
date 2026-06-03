@@ -1,5 +1,5 @@
-project(picoplayer CXX)
 cmake_minimum_required(VERSION 3.5)
+project(picoplayer CXX)
 include(CMakeDependentOption)
 
 find_package(PkgConfig)
@@ -18,6 +18,7 @@ find_package(DBus1 REQUIRED)
 pkg_search_module(GLIB glib-2.0 REQUIRED)
 pkg_search_module(DBUSGLIB dbus-glib-1 REQUIRED)
 pkg_search_module(GSTREAMER gstreamer-1.0 REQUIRED)
+pkg_search_module(GSTREAMER_APP gstreamer-app-1.0 REQUIRED)
 pkg_search_module(GSTREAMER_PLAYER gstreamer-player-1.0 REQUIRED)
 pkg_search_module(GSTREAMER_VIDEO gstreamer-video-1.0 REQUIRED)
 pkg_search_module(EGL egl REQUIRED)
@@ -31,7 +32,7 @@ endif()
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 file(GLOB TsFiles "translations/*.ts")
@@ -59,6 +60,7 @@ target_include_directories(picoplayer PRIVATE
     ${SAILFISH_INCLUDE_DIRS}
     ${AUDIORESOURCE_INCLUDE_DIRS}
     ${GSTREAMER_INCLUDE_DIRS}
+    ${GSTREAMER_APP_INCLUDE_DIRS}
     ${GSTREAMER_PLAYER_INCLUDE_DIRS}
     ${GSTREAMER_VIDEO_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
@@ -77,6 +79,7 @@ target_link_libraries(picoplayer PUBLIC
     ${SAILFISH_LDFLAGS}
     ${AUDIORESOURCE_LDFLAGS}
     ${GSTREAMER_LDFLAGS}
+    ${GSTREAMER_APP_LDFLAGS}
     ${GSTREAMER_PLAYER_LDFLAGS}
     ${GSTREAMER_VIDEO_LDFLAGS}
     ${EGL_LDFLAGS}

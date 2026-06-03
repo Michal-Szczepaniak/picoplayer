@@ -30,6 +30,8 @@ int main(int argc, char *argv[])
 
     QuickViewHelper::setView(view.data());
 
+    GstElement *dummy_qmlglsink = gst_element_factory_make("qmlglsink", nullptr);
+
     PulseAudioControl pacontrol;
     view->rootContext()->setContextProperty("pacontrol", &pacontrol);
 

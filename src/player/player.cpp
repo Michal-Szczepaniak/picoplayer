@@ -65,10 +65,18 @@ void VideoPlayer::classBegin() {
     _playbin = gst_element_factory_make ("playbin3", "Playbin3");
     Q_ASSERT(_playbin);
 
-    _renderer = new QtCamViewfinderRendererNemo(this);
-    Q_ASSERT(_renderer);
+    _sinkBin = gst_element_factory_make ("glsinkbin", "SinkBin");
+    Q_ASSERT(_sinkBin);
 
-    QObject::connect(_renderer, SIGNAL(updateRequested()), this, SLOT(updateRequested()));
+    _qmlGlSink = gst_element_factory_make ("qmlglsink", "qmlglsink");
+    Q_ASSERT(_qmlGlSink);
+
+    g_object_set(_sinkBin, "sink", _qmlGlSink, nullptr);
+
+//    _renderer = new QtCamViewfinderRendererNemo(this);
+//    Q_ASSERT(_renderer);
+
+//    QObject::connect(_renderer, SIGNAL(updateRequested()), this, SLOT(updateRequested()));
 
     _pulsesink = gst_element_factory_make("pulsesink", "PulseSink");
     Q_ASSERT(_pulsesink);
@@ -86,8 +94,8 @@ void VideoPlayer::classBegin() {
 
     g_object_set(_playbin, "audio-filter", _scaletempo, NULL);
     g_object_set(_playbin, "audio-sink", _pulsesink, NULL);
-    g_object_set(_playbin, "video-sink", _renderer->sinkElement(), NULL);
-    g_object_set(_playbin, "text-sink", _appSink, NULL);
+    g_object_set(_playbin, "video-sink", _sinkBin, NULL);
+//    g_object_set(_playbin, "text-sink", _appSink, NULL);
 
     GstBus *bus = gst_element_get_bus(_pipeline);
     gst_bus_add_watch(bus, bus_call, this);
@@ -249,7 +257,7 @@ bool VideoPlayer::pause() {
 }
 
 bool VideoPlayer::play() {
-    _renderer->resize(QSizeF(width(), height()));
+//    _renderer->resize(QSizeF(width(), height()));
 
     if (!_pipeline) {
         qmlInfo(this) << "no playbin";
@@ -345,6 +353,12 @@ void VideoPlayer::selectSubtitle(int index)
     emit selectedSubtitleStreamChanged();
 
     selectStreams();
+}
+
+void VideoPlayer::setOutput(QQuickItem *videoItem)
+{
+    qDebug() << videoItem;
+    g_object_set(_qmlGlSink, "widget", gpointer(videoItem), nullptr);
 }
 
 void VideoPlayer::geometryChanged(const QRectF& newGeometry, const QRectF& oldGeometry) {
@@ -549,7 +563,7 @@ gboolean VideoPlayer::bus_call(GstBus *bus, GstMessage *msg, gpointer data) {
                     GstStructure *structure = gst_caps_get_structure(caps, 0);
                     if (structure) {
                         QString name = gst_structure_get_name(structure);
-                        if (name == "subpicture/x-pgs" || name == "audio/x-dts" || name == "application/x-ass") continue;
+//                        if (name == "subpicture/x-pgs" || name == "audio/x-dts" || name == "application/x-ass") continue;
                     }
                 }
                 gst_caps_unref(caps);
