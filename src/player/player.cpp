@@ -116,6 +116,10 @@ void VideoPlayer::setVideoSource(const QUrl& videoSource) {
 
         resetPlayer();
 
+        // Preroll (PAUSED) so stream collection/duration are available for
+        // selection before the user presses play.
+        pause();
+
         emit videoSourceChanged();
     }
 }
@@ -160,13 +164,8 @@ QStringList VideoPlayer::getVideoStreams() const
 {
     QStringList stringList = { tr("None") };
 
-    for (QPair<QString, QString> lang : _videoStreams) {
-        if (!lang.second.size()) {
-            stringList.append(tr("Unknown"));
-        } else {
-            QLocale locale(lang.second);
-            stringList.append(QLocale::languageToString(locale.language()));
-        }
+    for (QPair<QString, QString> stream : _videoStreams) {
+        stringList.append(stream.second.size() ? stream.second : tr("Unknown"));
     }
 
     return stringList;
@@ -176,13 +175,8 @@ QStringList VideoPlayer::getAudioStreams() const
 {
     QStringList stringList = { tr("None") };
 
-    for (QPair<QString, QString> lang : _audioStreams) {
-        if (!lang.second.size()) {
-            stringList.append(tr("Unknown"));
-        } else {
-            QLocale locale(lang.second);
-            stringList.append(QLocale::languageToString(locale.language()));
-        }
+    for (QPair<QString, QString> stream : _audioStreams) {
+        stringList.append(stream.second.size() ? stream.second : tr("Unknown"));
     }
 
     return stringList;
@@ -192,13 +186,8 @@ QStringList VideoPlayer::getSubtitleStreams() const
 {
     QStringList stringList = { tr("None") };
 
-    for (QPair<QString, QString> lang : _subtitleStreams) {
-        if (!lang.second.size()) {
-            stringList.append(tr("Unknown"));
-        } else {
-            QLocale locale(lang.second);
-            stringList.append(QLocale::languageToString(locale.language()));
-        }
+    for (QPair<QString, QString> stream : _subtitleStreams) {
+        stringList.append(stream.second.size() ? stream.second : tr("Unknown"));
     }
 
     return stringList;
@@ -290,7 +279,7 @@ bool VideoPlayer::seek(qint64 offset) {
     }
 
     bool ret = gst_element_seek(
-        _pipeline, _playbackSpeed, GST_FORMAT_TIME, (GstSeekFlags) (GST_SEEK_FLAG_FLUSH|GST_SEEK_FLAG_TRICKMODE|GST_SEEK_FLAG_ACCURATE), GST_SEEK_TYPE_SET, offset, GST_SEEK_TYPE_NONE, -1
+        _pipeline, _playbackSpeed, GST_FORMAT_TIME, (GstSeekFlags) (GST_SEEK_FLAG_FLUSH|GST_SEEK_FLAG_ACCURATE), GST_SEEK_TYPE_SET, offset, GST_SEEK_TYPE_NONE, -1
     );
 
     if (ret) {
@@ -563,13 +552,13 @@ gboolean VideoPlayer::bus_call(GstBus *bus, GstMessage *msg, gpointer data) {
                     GstStructure *structure = gst_caps_get_structure(caps, 0);
                     if (structure) {
                         QString name = gst_structure_get_name(structure);
-//                        if (name == "subpicture/x-pgs" || name == "audio/x-dts" || name == "application/x-ass") continue;
                     }
                 }
                 gst_caps_unref(caps);
 
                 QString streamId = QString::fromUtf8(gst_stream_get_stream_id(stream));
                 QString language{};
+                QString title{};
                 GstTagList *tags = gst_stream_get_tags(stream);
                 if (tags) {
                     const GValue *tagValue = gst_tag_list_get_value_index(tags, GST_TAG_LANGUAGE_CODE, 0);
@@ -580,18 +569,43 @@ gboolean VideoPlayer::bus_call(GstBus *bus, GstMessage *msg, gpointer data) {
                         g_free(str);
                     }
 
+                    const GValue *titleValue = gst_tag_list_get_value_index(tags, GST_TAG_TITLE, 0);
+
+                    if (G_VALUE_HOLDS_STRING(titleValue)) {
+                        gchar *str = g_value_dup_string(titleValue);
+                        title = QString::fromUtf8(str);
+                        g_free(str);
+                    }
+
                     gst_tag_list_unref(tags);
+                }
+
+                QString languageName;
+                if (!language.isEmpty()) {
+                    QLocale locale(language);
+                    if (locale.language() != QLocale::C) {
+                        languageName = QLocale::languageToString(locale.language());
+                    }
+                }
+
+                QString label;
+                if (!languageName.isEmpty() && !title.isEmpty()) {
+                    label = QStringLiteral("%1 - %2").arg(languageName, title);
+                } else if (!languageName.isEmpty()) {
+                    label = languageName;
+                } else if (!title.isEmpty()) {
+                    label = title;
                 }
 
                 switch (gst_stream_get_stream_type(stream)) {
                 case GST_STREAM_TYPE_VIDEO:
-                    that->_videoStreams.append({streamId, language});
+                    that->_videoStreams.append({streamId, label});
                     break;
                 case GST_STREAM_TYPE_AUDIO:
-                    that->_audioStreams.append({streamId, language});
+                    that->_audioStreams.append({streamId, label});
                     break;
                 case GST_STREAM_TYPE_TEXT:
-                    that->_subtitleStreams.append({streamId, language});
+                    that->_subtitleStreams.append({streamId, label});
                     break;
                 default:
                     break;
@@ -607,6 +621,11 @@ gboolean VideoPlayer::bus_call(GstBus *bus, GstMessage *msg, gpointer data) {
     }
         break;
     case GST_MESSAGE_NEW_CLOCK:
+    {
+        emit that->durationChanged();
+    }
+        break;
+    case GST_MESSAGE_ASYNC_DONE:
     {
         emit that->durationChanged();
     }

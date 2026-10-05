@@ -124,9 +124,10 @@ Page {
     }
 
     onStatusChanged: {
-        if(status === PageStatus.Active) {
-            app.videoCover = true
+        if (status === PageStatus.Activating) {
             Theme.setColorScheme("dark")
+        } else if(status === PageStatus.Active) {
+            app.videoCover = true
             showHideControls()
             pacontrol.update()
             hideControlsAutomatically.restart()
@@ -549,7 +550,7 @@ Page {
                             }
 
                             onCurrentIndexChanged: {
-                                if (_menuOpen) videoPlayer.selectVideoStream(currentIndex - 1)
+                                videoPlayer.selectVideoStream(currentIndex - 1)
                             }
 
                             menu: ContextMenu {
@@ -572,7 +573,7 @@ Page {
                             }
 
                             onCurrentIndexChanged: {
-                                if (_menuOpen) videoPlayer.selectAudioStream(currentIndex - 1)
+                                videoPlayer.selectAudioStream(currentIndex - 1)
                             }
 
                             menu: ContextMenu {
@@ -595,7 +596,7 @@ Page {
                             }
 
                             onCurrentIndexChanged: {
-                                if (_menuOpen) videoPlayer.selectSubtitle(currentIndex - 1)
+                                videoPlayer.selectSubtitle(currentIndex - 1)
                             }
 
                             menu: ContextMenu {
