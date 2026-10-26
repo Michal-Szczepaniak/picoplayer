@@ -27,6 +27,7 @@ Page {
         path: "/apps/picoplayer"
 
         property real scale: 2
+        property bool ignoreNotch: false
     }
 
     DocumentGalleryModel {
@@ -116,6 +117,12 @@ Page {
             MenuItem {
                 text: qsTr("About")
                 onClicked: pageStack.push(Qt.resolvedUrl("About.qml"))
+            }
+
+            MenuItem {
+                visible: Screen.hasCutouts
+                text: settings.ignoreNotch ? qsTr("Zoom into notch area") : qsTr("Ignore notch area")
+                onClicked: settings.ignoreNotch = !settings.ignoreNotch
             }
 
             MenuItem {
